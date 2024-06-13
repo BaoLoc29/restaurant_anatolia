@@ -5,7 +5,9 @@ const Footer = () => {
     <footer>
       <div className="container">
         <div className="banner">
-          <div className="left">ZEESHU</div>
+          <div className="left">
+            <img src="../../public/logo_image.png" alt="" width="180" />
+          </div>
           <div className="right">
             <p> HO CHI MINH, VIETNAM</p>
             <p>Open: 08:00 AM - 11:00 PM</p>

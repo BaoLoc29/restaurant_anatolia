@@ -885,10 +885,7 @@ footer .container .banner .right {
   -moz-box-shadow: -1px 0px 37px 0px rgba(152, 87, 191, 0.75);
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
-.reservation .container .banner .reservation_form_box:hover {
-  background-color: #f0f0f0;
-  box-shadow: -1px 0px 37px 0px rgba(0, 0, 0, 0.2);
-}
+
 .reservation .container .banner .reservation_form_box form div {
   display: flex;
   gap: 25px;
@@ -1004,6 +1001,14 @@ footer .container .banner .right {
 .reservation .container .banner .reservation_form_box form button:hover span {
   background: #fff; /* Màu nền của span khi hover */
   color: #111; /* Màu chữ của span khi hover */
+}
+
+.error {
+  color: red;
+  font-size: 15px;
+  margin-top: 15px;
+  display: block;
+  text-align: center;
 }
 
 @media (max-width: 1520px) {

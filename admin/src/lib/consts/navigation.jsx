@@ -1,10 +1,10 @@
 import {
   HiOutlineViewGrid,
-  // HiOutlineShoppingCart,
   HiOutlineQuestionMarkCircle,
   HiOutlineCog,
 } from "react-icons/hi";
-import { SiAirtable } from "react-icons/si";
+import { HiDocumentChartBar } from "react-icons/hi2";
+import { TbBrandAirtable } from "react-icons/tb";
 import { FaUserTie } from "react-icons/fa";
 import { IoFastFood } from "react-icons/io5";
 
@@ -15,17 +15,17 @@ export const DASHBOARD_SIDEBAR_LINKS = [
     path: "/",
     icon: <HiOutlineViewGrid />,
   },
-  // {
-  //   key: "orders",
-  //   label: "Orders",
-  //   path: "/orders",
-  //   icon: <HiOutlineShoppingCart />,
-  // },
+  {
+    key: "orders",
+    label: "Quản lý đặt bàn",
+    path: "/orders",
+    icon: <HiDocumentChartBar />,
+  },
   {
     key: "tables",
     label: "Quản lý bàn",
     path: "/tables",
-    icon: <SiAirtable />,
+    icon: <TbBrandAirtable />,
   },
   {
     key: "employees",

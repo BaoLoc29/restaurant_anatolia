@@ -35,17 +35,10 @@ const Login = () => {
   };
 
   const onFinishFailed = (errorInfo) => {
-    console.log("Đăng nhập hất bại:", errorInfo);
+    console.log("Đăng nhập thất bại:", errorInfo);
   };
   return (
-    <div
-      className="flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen md:h-screen lg:py-0"
-      style={{
-        backgroundImage: `url('https://backgroundabstract.com/wp-content/uploads/edd/2022/01/25101-e1656072622949.jpg')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen md:h-screen lg:py-0 shadow-custom-strong bg-white rounded-lg">
       <div className="w-full bg-white rounded-md shadow-md md:mt-0 sm:max-w-md xl:p-0 bg-white dark:border dark:border-gray-200">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
           <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-black flex justify-center">

@@ -1,16 +1,27 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import "./Confrim.css"
-import { scroller } from "react-scroll"; // Import scroller từ react-scroll
+import { scroller } from "react-scroll";
+import "./Confrim.css";
 
 const Confirm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const reservationData = location.state;
+  const [loading, setLoading] = useState(false);
+  const [formattedDate, setFormattedDate] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setErrorMessage("");
+    if (reservationData) {
+      setFormattedDate(formatDateToMMDDYYYY(reservationData.date));
+    }
+  }, [reservationData]);
 
   const handleConfirm = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.post(
         "http://localhost:4000/reservation/send",
@@ -25,9 +36,11 @@ const Confirm = () => {
       toast.success(data.message);
       navigate("/success");
     } catch (error) {
-      console.error("Lỗi:", error);
-      const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi";
-      toast.error(errorMessage);
+      console.error("Error:", error);
+      const errorMessage = error.response?.data?.message || "An error occurred";
+      setErrorMessage(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,7 +52,12 @@ const Confirm = () => {
         delay: 0,
         smooth: "easeInOutQuart",
       });
-    }, 100); // Đảm bảo rằng trang đã điều hướng trước khi cuộn
+    }, 100);
+  };
+
+  const formatDateToMMDDYYYY = (dateString) => {
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
   };
 
   if (!reservationData) {
@@ -51,19 +69,48 @@ const Confirm = () => {
     <section className="confirm">
       <div className="container">
         <div className="confirm_box">
+          <img src="../../../public/logo_image.png" alt="" className="logo" />
           <h1>Xác Nhận Đặt Chỗ</h1>
-          <div className="confirm_details">
-            <p><strong>Họ và tên:</strong> {reservationData.name}</p>
-            <p><strong>Email:</strong> {reservationData.email}</p>
-            <p><strong>Điện thoại:</strong> {reservationData.phone}</p>
-            <p><strong>Ngày:</strong> {reservationData.date}</p>
-            <p><strong>Giờ:</strong> {reservationData.time}</p>
-            <p><strong>Số lượng khách:</strong> {reservationData.guests}</p>
-            <p><strong>Ghi chú:</strong> {reservationData.notes}</p>
-          </div>
+          <table className="confirm_details">
+            <tbody>
+              <tr className="detail_item">
+                <th className="label">Họ và tên:</th>
+                <td>{reservationData.name}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Email:</th>
+                <td>{reservationData.email}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Điện thoại:</th>
+                <td>{reservationData.phone}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Ngày:</th>
+                <td>{formattedDate}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Giờ:</th>
+                <td>{reservationData.time}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Số lượng khách:</th>
+                <td>{reservationData.guests}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Ghi chú:</th>
+                <td>{reservationData.notes}</td>
+              </tr>
+            </tbody>
+          </table>
+          <span className="error">{errorMessage}</span>
           <div className="confirm_buttons">
-            <button onClick={handleConfirm}>Xác nhận</button>
-            <button onClick={handleBack} className="back_button">Quay lại</button>
+            <button onClick={handleBack} className="back_button">
+              Quay lại
+            </button>
+            <button onClick={handleConfirm} disabled={loading}>
+              {loading ? "Đang xử lý..." : "Xác nhận"}
+            </button>
           </div>
         </div>
       </div>

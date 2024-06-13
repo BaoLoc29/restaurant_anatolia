@@ -76,6 +76,21 @@ const TableComponent = () => {
       title: "Vị trí bàn",
       dataIndex: "location",
       key: "location",
+      filters: [
+        {
+          text: "Trung tâm",
+          value: "Trung tâm",
+        },
+        {
+          text: "Cạnh cửa sổ",
+          value: "Cạnh cửa sổ",
+        },
+        {
+          text: "Ngoài trời",
+          value: "Ngoài trời",
+        },
+      ],
+      onFilter: (value, record) => record.location.indexOf(value) === 0,
     },
     {
       title: "Ngày tạo",
@@ -88,10 +103,10 @@ const TableComponent = () => {
       key: "status",
       render: (status) => {
         const colorMap = {
-          "Còn trống": "green",
+          "Còn trống": "red",
           "Đang sử dụng": "blue",
-          "Đã đặt cọc": "gold",
-          "Chưa đặt cọc": "red",
+          "Đã đặt cọc": "orange",
+          "Chưa đặt cọc": "green",
         };
         return <Tag color={colorMap[status]}>{status}</Tag>;
       },

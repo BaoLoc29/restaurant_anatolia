@@ -7,7 +7,7 @@ import Login from "./components/Login";
 import NonAuthLayout from "./layouts/NonAuthLayout/index.jsx";
 import AuthLayout from "./layouts/AuthLayout/index.jsx";
 import isObjctEmpty from "./utils/isObjectEmpty";
-import Orders from "./components/Orders.jsx";
+import Orders from "./components/Order.jsx";
 import Profile from "./components/Profile.jsx";
 import Employee from "./components/Employee.jsx";
 import Table from "./components/Table.jsx";

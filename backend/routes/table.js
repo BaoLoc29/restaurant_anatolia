@@ -3,7 +3,7 @@ import { createTable, deleteTable, editTable, getPagingTable, getTableById, sear
 import authentication from './../middlewares/authentication.js';
 import authorization from './../middlewares/authorization.js';
 const router = express.Router()
-router.post("/create-table", authentication, authorization, createTable)
+router.post("/create-table", authentication, createTable)
 router.put("/:id", authentication, authorization, editTable)
 router.delete("/:id", authentication, authorization, deleteTable)
 router.get("/get-paging-table", authentication, authorization, getPagingTable)
