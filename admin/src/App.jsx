@@ -7,7 +7,7 @@ import Login from "./components/Login";
 import NonAuthLayout from "./layouts/NonAuthLayout/index.jsx";
 import AuthLayout from "./layouts/AuthLayout/index.jsx";
 import isObjctEmpty from "./utils/isObjectEmpty";
-import Orders from "./components/Order.jsx";
+import Order from "./components/Order.jsx";
 import Profile from "./components/Profile.jsx";
 import Employee from "./components/Employee.jsx";
 import Table from "./components/Table.jsx";
@@ -26,7 +26,7 @@ function App() {
           <Route path="/" element={<AuthLayout />}>
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
-              <Route path="orders" element={<Orders />} />
+              <Route path="orders" element={<Order />} />
               <Route path="employees" element={<Employee />} />
               <Route path="tables" element={<Table />} />
               <Route path="menus" element={<Menu />} />

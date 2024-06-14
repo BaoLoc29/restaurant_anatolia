@@ -1,7 +1,7 @@
 import ErrorHandler from "../middlewares/error.js";
 import { Reservation } from "../models/reservation.js";
 import Table from "../models/table.js"
-
+import joi from "joi"
 const synonymKeywords = {
   "Cạnh cửa sổ": ["gần cửa sổ", "sát cửa sổ", "view đẹp"],
   "Ngoài trời": ["cảnh đẹp", "thoáng mát", "ngắm cảnh", "view đẹp"],
@@ -94,6 +94,49 @@ export const getPagingReservation = async (req, res) => {
     const totalPage = Math.ceil(countReservation / query.pageSize)
 
     return res.status(200).json({ reservations, totalPage, count: countReservation })
+  } catch (error) {
+    return res.status(500).json({ message: error.message })
+  }
+}
+export const editReservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const editSchema = joi.object({
+      status: joi.string().required().valid('Đang hoạt động', 'Đã hủy').messages({
+        'string.empty': 'Trạng thái đơn đật bàn không được để trống!',
+        'any.only': "Trạng thái phải là 'Đang hoạt động' hoặc 'Đã hủy'",
+      })
+    })
+    const { error } = editSchema.validate({ status });
+    if (error) {
+      return res.status(400).json({
+        error: error.details.map(e => e.message)
+      });
+    }
+    const reservation = await Reservation.findById(id);
+    if (!reservation) {
+      return res.status(404).json({ message: 'Không tìm thấy đơn đặt bàn này!' });
+    }
+
+    // Tính chênh lệch thời gian theo phút
+    const currentTime = new Date();
+    const reservationTime = new Date(reservation.time);
+    const timeDiffInMinutes = Math.floor((currentTime - reservationTime) / (1000 * 60));
+
+    // Hủy đơn nếu đâ trôi qua thời gian đặt    phút
+    if (timeDiffInMinutes > 1 && reservation.status === 'Đang hoạt động') {
+      reservation.status = 'Đã hủy';
+      await reservation.save();
+      return res.status(200).json({ message: 'Cập nhật đơn đặt bàn thành công.' });
+    }
+
+    // Ngược lại cập nhật trạng thái đặt chỗ theo yêu cầu
+    reservation.status = status;
+    await reservation.save();
+    return res.status(200).json({ message: 'Cập nhật đơn đặt bàn thành công.' });
+
   } catch (error) {
     return res.status(500).json({ message: error.message })
   }

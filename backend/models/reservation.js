@@ -63,6 +63,11 @@ const reservationSchema = new mongoose.Schema({
   table: {
     type: String,
     required: true
+  },
+  status: {
+    type: String,
+    required: true,
+    default: "Đang hoạt động"
   }
 }, { timestamps: true });
 

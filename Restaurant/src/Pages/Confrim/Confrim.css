@@ -30,7 +30,11 @@
 }
 
 .confirm_box h1 {
-  margin-bottom: 20px;
+  margin-top: 10px;
+}
+
+.confirm_box p {
+  margin: 10px;
 }
 
 .confirm_details {

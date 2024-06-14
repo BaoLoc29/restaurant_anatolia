@@ -11,7 +11,7 @@ import { FiLogIn } from "react-icons/fi";
 
 import { useDispatch, useSelector } from "react-redux";
 import { login as loginAction } from "../feature/user/userSlice";
-
+import { assets } from "../assets/assets";
 const Login = () => {
   const [loading, setLoading] = useState(false);
   const naviagate = useNavigate();
@@ -38,7 +38,12 @@ const Login = () => {
     console.log("Đăng nhập thất bại:", errorInfo);
   };
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto h-screen md:h-screen lg:py-0 shadow-custom-strong bg-white rounded-lg">
+    <div className="flex items-center justify-center px-6 py-8 mx-auto h-screen md:h-screen shadow-custom-strong bg-gray-200 rounded-lg">
+      <img
+        src={assets.illustration}
+        alt="illustration"
+        className="mt-10 mr-20"
+      />
       <div className="w-full bg-white rounded-md shadow-md md:mt-0 sm:max-w-md xl:p-0 bg-white dark:border dark:border-gray-200">
         <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
           <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-black flex justify-center">

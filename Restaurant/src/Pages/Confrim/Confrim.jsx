@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { scroller } from "react-scroll";
+import { Radio } from 'antd';
 import "./Confrim.css";
 
 const Confirm = () => {
@@ -12,6 +13,7 @@ const Confirm = () => {
   const [loading, setLoading] = useState(false);
   const [formattedDate, setFormattedDate] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [depositOption, setDepositOption] = useState(null);
 
   useEffect(() => {
     setErrorMessage("");
@@ -21,7 +23,11 @@ const Confirm = () => {
   }, [reservationData]);
 
   const handleConfirm = async () => {
-    setLoading(true);
+    if (depositOption === null) {
+      setErrorMessage("Bạn phải chọn một tùy chọn đặt cọc.");
+      return;
+    }
+    setLoading(true); 
     try {
       const { data } = await axios.post(
         "http://localhost:4000/reservation/send",
@@ -71,6 +77,9 @@ const Confirm = () => {
         <div className="confirm_box">
           <img src="../../../public/logo_image.png" alt="" className="logo" />
           <h1>Xác Nhận Đặt Chỗ</h1>
+          <p>
+            Nếu bạn đặt cọc tối thiểu 200k, bạn sẽ được giữ chỗ lâu hơn 30 phút!
+          </p>
           <table className="confirm_details">
             <tbody>
               <tr className="detail_item">
@@ -100,6 +109,15 @@ const Confirm = () => {
               <tr className="detail_item">
                 <th className="label">Ghi chú:</th>
                 <td>{reservationData.notes}</td>
+              </tr>
+              <tr className="detail_item">
+                <th className="label">Đặt cọc</th>
+                <td>
+                  <Radio.Group name="radiogroup" defaultValue={0} onChange={(e) => setDepositOption(e.target.value)}>
+                    <Radio value={1}>Không cọc</Radio>
+                    <Radio value={2}>Đặt cọc</Radio>
+                  </Radio.Group>
+                </td>
               </tr>
             </tbody>
           </table>
