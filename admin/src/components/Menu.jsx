@@ -103,14 +103,6 @@ const MenuComponent = () => {
       },
     },
     {
-      title: "Giảm giá",
-      dataIndex: "discount",
-      key: "discount",
-      render: (discount) => {
-        return `${discount}%`;
-      },
-    },
-    {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",

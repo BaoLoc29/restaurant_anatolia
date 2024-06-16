@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
 import { HiOutlineArrowRight } from "react-icons/hi";
-import { format, isBefore, startOfToday, parse } from "date-fns";
-import { vi } from "date-fns/locale";
+import { isBefore, startOfToday, parse } from "date-fns";
 
 const Reservation = () => {
   const location = useLocation();
@@ -36,7 +34,6 @@ const Reservation = () => {
     if (!validateForm()) {
       return;
     }
-
     const reservationData = { name, email, phone, date, time, guests, notes };
     navigate("/confirm", { state: reservationData });
   };
@@ -69,7 +66,7 @@ const Reservation = () => {
       newErrors.phone = "Vui lòng nhập số điện thoại của bạn!";
     } else if (!/^0\d{9}$/.test(phone)) {
       newErrors.phone =
-        "Số điện thoại không hợp lệ! Vui lòng bắt đầu bằng số 0 và nhập 10 chữ số.";
+        "Số điện thoại không hợp lệ! Vui lòng bắt đầu bằng số 0 và nhập 10 chữ số!";
     }
 
     if (!guests) {
@@ -89,7 +86,7 @@ const Reservation = () => {
     if (isBefore(selectedDate, today)) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        date: "Vui lòng chọn ngày từ hôm nay trở đi.",
+        date: "Vui lòng chọn ngày từ hôm nay trở đi!",
       }));
       setDate("");
     } else {
@@ -103,10 +100,14 @@ const Reservation = () => {
 
   const handleTimeChange = (e) => {
     const selectedTime = e.target.value;
-    const [selectedHour, selectedMinute] = selectedTime.split(":").map(Number);
+    const selectedDate = parse(date, "yyyy-MM-dd", new Date());
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
+    const [selectedHour, selectedMinute] = selectedTime.split(":").map(Number);
+
+    const isToday = selectedDate.toDateString() === now.toDateString();
+    const isFutureTime =
+      selectedHour > now.getHours() ||
+      (selectedHour === now.getHours() && selectedMinute > now.getMinutes());
 
     if (
       selectedHour < 8 ||
@@ -115,16 +116,13 @@ const Reservation = () => {
     ) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        time: "Giờ hoạt động từ 8:00 sáng đến 11:00 tối.",
+        time: "Giờ hoạt động của nhà hàng từ 8:00 sáng đến 11:00 tối!",
       }));
       setTime("");
-    } else if (
-      selectedHour < currentHour ||
-      (selectedHour === currentHour && selectedMinute < currentMinute)
-    ) {
+    } else if (isToday && !isFutureTime) {
       setErrors((prevErrors) => ({
         ...prevErrors,
-        time: "Vui lòng chọn thời gian khác.",
+        time: "Thời gian không hợp lệ! Vui lòng chọn thời gian trong tương lai!",
       }));
       setTime("");
     } else {
@@ -211,8 +209,10 @@ const Reservation = () => {
         </div>
         <div className="banner">
           <div className="reservation_form_box">
-            <h1>ĐẶT CHỖ</h1>
-            <p>Có thắc mắc gì, vui lòng gọi</p>
+            <h1>ĐẶT BÀN NGAY</h1>
+            <p>
+              Liên hệ nhà hàng thông qua hotline <b>0922982210</b>
+            </p>
             <form onSubmit={handleReservation}>
               <div>
                 <input
@@ -290,7 +290,6 @@ const Reservation = () => {
           </div>
         </div>
       </div>
-      <Toaster />
     </section>
   );
 };

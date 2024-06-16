@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { scroller } from "react-scroll";
-import { Radio } from 'antd';
+import { Radio } from "antd";
 import "./Confrim.css";
 
 const Confirm = () => {
@@ -21,17 +21,23 @@ const Confirm = () => {
       setFormattedDate(formatDateToMMDDYYYY(reservationData.date));
     }
   }, [reservationData]);
-
   const handleConfirm = async () => {
     if (depositOption === null) {
       setErrorMessage("Bạn phải chọn một tùy chọn đặt cọc.");
       return;
     }
-    setLoading(true); 
+
+    const updatedReservationData = {
+      ...reservationData,
+      deposit: depositOption === 2,
+      depositAmount: depositOption === 2 ? 200000 : 0,
+    };
+
+    setLoading(true);
     try {
       const { data } = await axios.post(
         "http://localhost:4000/reservation/send",
-        reservationData,
+        updatedReservationData,
         {
           headers: {
             "Content-Type": "application/json",
@@ -78,7 +84,8 @@ const Confirm = () => {
           <img src="../../../public/logo_image.png" alt="" className="logo" />
           <h1>Xác Nhận Đặt Chỗ</h1>
           <p>
-            Nếu bạn đặt cọc tối thiểu 200k, bạn sẽ được giữ chỗ lâu hơn 30 phút!
+            Nếu bạn đặt cọc tối thiểu 200.000đ, bạn sẽ được giữ chỗ lâu hơn 30
+            phút!
           </p>
           <table className="confirm_details">
             <tbody>
@@ -113,9 +120,13 @@ const Confirm = () => {
               <tr className="detail_item">
                 <th className="label">Đặt cọc</th>
                 <td>
-                  <Radio.Group name="radiogroup" defaultValue={0} onChange={(e) => setDepositOption(e.target.value)}>
+                  <Radio.Group
+                    name="radiogroup"
+                    defaultValue={0}
+                    onChange={(e) => setDepositOption(e.target.value)}
+                  >
                     <Radio value={1}>Không cọc</Radio>
-                    <Radio value={2}>Đặt cọc</Radio>
+                    <Radio value={2}>Đặt cọc (200.000đ)</Radio>
                   </Radio.Group>
                 </td>
               </tr>

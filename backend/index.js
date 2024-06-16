@@ -4,7 +4,6 @@ import route from "./routes/index.js";
 import dotenv from "dotenv"
 import cors from "cors"
 import { errorMiddleware } from "./middlewares/error.js";
-
 const app = express();
 
 dotenv.config()

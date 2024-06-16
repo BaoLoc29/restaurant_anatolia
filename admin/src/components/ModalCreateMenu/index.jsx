@@ -24,7 +24,6 @@ const ModalCreateMenu = ({
         description: result.data.menu.description,
         unit: result.data.menu.unit,
         price: result.data.menu.price,
-        discount: result.data.menu.discount,
         status: result.data.menu.status,
       });
       setLoadingData(false);
@@ -128,30 +127,6 @@ const ModalCreateMenu = ({
               >
                 <Input
                   placeholder="Giá món ăn"
-                  className="text-base"
-                  type="number"
-                />
-              </Form.Item>
-
-              <label
-                htmlFor="discount"
-                className="block text-sm font-bold mb-1"
-              >
-                Giảm giá: <span className="text-red-500">*</span>
-              </label>
-              <Form.Item
-                name="discount"
-                style={{ marginBottom: 10 }}
-                rules={[
-                  { required: true, message: "Giảm giá không được để trống!" },
-                  {
-                    pattern: /^(0|[1-9]\d*)$/,
-                    message: "Giảm giá món phải từ 0% trở lên!",
-                  },
-                ]}
-              >
-                <Input
-                  placeholder="Nhập giảm giá (nếu có)"
                   className="text-base"
                   type="number"
                 />

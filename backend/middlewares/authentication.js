@@ -7,7 +7,7 @@ const authentication = async (req, res, next) => {
 
         if (!bearerToken) {
             return res.status(401).json({
-                message: "Bạn chưa đăng nhập"
+                message: "Bạn chưa đăng nhập!"
             });
         }
         const token = bearerToken.split(" ")[1];
@@ -15,7 +15,7 @@ const authentication = async (req, res, next) => {
 
         if (!verify) {
             return res.status(401).json({
-                message: "Bạn chưa đăng nhập"
+                message: "Bạn chưa đăng nhập!"
             });
         }
 
@@ -24,7 +24,7 @@ const authentication = async (req, res, next) => {
         const findUser = await user.findById(userId);
 
         if (!findUser) {
-            return res.status(404).json({ message: "Người dùng không tồn tại" });
+            return res.status(404).json({ message: "Người dùng không tồn tại!" });
         }
         req.user = findUser;
         next();

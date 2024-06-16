@@ -1,12 +1,12 @@
 import Menu from "../models/menu.js";
 import joi from "joi"
-
+import ErrorHandler from "../middlewares/error.js";
 const formatCreatedAt = (date) => {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
-export const createMenu = async (req, res) => {
+export const createMenu = async (req, res, next) => {
     try {
-        const { name, classify, description, price, discount } = req.body
+        const { name, classify, description, price } = req.body
 
         const createSchema = joi.object({
             name: joi.string().required().messages({
@@ -21,17 +21,14 @@ export const createMenu = async (req, res) => {
             }),
             price: joi.number().required().messages({
                 'any.required': 'Giá món ăn không được để trống!'
-            }),
-            discount: joi.number().required().messages({
-                'any.required': 'Giảm giá món ăn không được để trống!'
             })
         });
 
-        const { error } = createSchema.validate({ name, classify, description, price, discount });
+        const { error } = createSchema.validate({ name, classify, description, price });
         if (error) {
-            return res.status(400).json({
-                error: error.details.map(e => e.message)
-            });
+            return next(
+                new ErrorHandler('Vui lòng điền đầy đủ thông tin món ăn!', 400)
+            );
         }
 
         let unit;
@@ -40,7 +37,9 @@ export const createMenu = async (req, res) => {
         } else if (classify === 'Đồ uống') {
             unit = 'Cốc';
         } else {
-            return res.status(400).json({ message: "Loại món ăn không hợp lệ!" });
+            return next(
+                new ErrorHandler('Loại món ăn không hợp lệ!', 400)
+            );
         }
 
         let prefix;
@@ -49,7 +48,9 @@ export const createMenu = async (req, res) => {
         } else if (classify === 'Đồ uống') {
             prefix = 'B';
         } else {
-            return res.status(400).json({ message: "Loại món ăn không hợp lệ!" });
+            return next(
+                new ErrorHandler('Mã món ăn không hợp lệ!', 400)
+            );
         }
 
         const latestMenu = await Menu.findOne({ code: new RegExp(`^${prefix}`) }).sort({ code: -1 }).exec();
@@ -67,8 +68,7 @@ export const createMenu = async (req, res) => {
             classify,
             description,
             unit,
-            price,
-            discount
+            price
         });
 
         return res.status(200).json({
@@ -84,7 +84,7 @@ export const createMenu = async (req, res) => {
 }
 export const editMenu = async (req, res) => {
     try {
-        const { name, classify, description, price, discount, status } = req.body;
+        const { name, classify, description, price, status } = req.body;
         const { id } = req.params;
 
         const editSchema = joi.object({
@@ -101,20 +101,17 @@ export const editMenu = async (req, res) => {
             price: joi.number().required().messages({
                 'any.required': 'Giá món ăn không được để trống!'
             }),
-            discount: joi.number().required().messages({
-                'any.required': 'Giảm giá món ăn không được để trống!'
-            }),
             status: joi.string().required().valid('Còn món', 'Hết món').messages({
                 'string.empty': 'Trạng thái món ăn không được để trống!',
                 'any.only': "Trạng thái món ăn trong menu phải là 'Còn món' hoặc 'Hết món'",
             }),
         });
 
-        const { error } = editSchema.validate({ name, classify, description, price, discount, status });
+        const { error } = editSchema.validate({ name, classify, description, price, status });
         if (error) {
-            return res.status(400).json({
-                error: error.details.map(e => e.message)
-            });
+            return next(
+                new ErrorHandler('Vui lòng điền đầy đủ thông tin món ăn!', 400)
+            );
         }
 
         let unit;
@@ -154,7 +151,6 @@ export const editMenu = async (req, res) => {
         updateMenu.description = description;
         updateMenu.unit = unit;
         updateMenu.price = price;
-        updateMenu.discount = discount;
         updateMenu.status = status
 
         await updateMenu.save();
@@ -176,7 +172,9 @@ export const deleteMenu = async (req, res) => {
         const menu = await Menu.findByIdAndDelete(id)
 
         if (!menu) {
-            return res.status(400).json({ message: "Không tìm thấy món ăn trong menu!" })
+            return next(
+                new ErrorHandler('Không tìm thấy món ăn cần tìm!', 400)
+            );
         }
 
         return res.status(200).json({ message: "Xóa món ăn ra khỏi menu thành công!" })
@@ -210,7 +208,9 @@ export const getMenuById = async (req, res) => {
         const { id } = req.params;
         const menu = await Menu.findById(id)
         if (!menu) {
-            return res.status(400).json({ message: "Không tìm thấy bàn cần tìm!" })
+            return next(
+                new ErrorHandler('Không tìm thấy món ăn cần tìm!', 400)
+            );
         }
         return res.status(200).json({ menu })
     } catch (error) {
@@ -231,13 +231,17 @@ export const searchMenu = async (req, res) => {
         } else if (option === "name") {
             searchField = { name: { $regex: keyword, $options: 'i' } };
         } else {
-            return res.status(400).json({ message: "Tùy chọn tìm kiếm không hợp lệ!" });
+            return next(
+                new ErrorHandler('Tùy chọn tìm kiếm không hợp lệ!', 400)
+            );
         }
 
         const menus = await Menu.find({ ...searchField });
 
         if (!menus || menus.length === 0) {
-            return res.status(404).json({ message: "Không tìm thấy món ăn này trong thực đơn!" });
+            return next(
+                new ErrorHandler('Không tìm thấy món ăn cần tìm!', 400)
+            );
         }
 
         const formattedMenus = menus.map(menu => ({
