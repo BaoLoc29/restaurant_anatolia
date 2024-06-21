@@ -73,19 +73,43 @@ const MenuComponent = () => {
     },
     {
       title: "Phân loại",
-      dataIndex: "classify",
-      key: "classify",
+      dataIndex: "category",
+      key: "category",
       filters: [
         {
-          text: "Món ăn",
-          value: "Món ăn",
+          text: "Bữa sáng",
+          value: "Bữa sáng",
         },
         {
-          text: "Đồ uống",
-          value: "Đồ uống",
+          text: "Bữa trưa",
+          value: "Bữa trưa",
+        },
+        {
+          text: "Bữa tối",
+          value: "Bữa tối",
+        },
+        {
+          text: "Ngày tết",
+          value: "Ngày tết",
+        },
+        {
+          text: "Noel",
+          value: "Noel",
+        },
+        {
+          text: "Tình nhân",
+          value: "Tình nhân",
+        },
+        {
+          text: "Gia đình",
+          value: "Gia đình",
+        },
+        {
+          text: "Lương về",
+          value: "Lương về",
         },
       ],
-      onFilter: (value, record) => record.classify.indexOf(value) === 0,
+      onFilter: (value, record) => record.category.indexOf(value) === 0,
     },
     {
       title: "Giá tiền",

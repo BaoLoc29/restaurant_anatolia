@@ -21,6 +21,7 @@ const ModalCreateMenu = ({
         code: result.data.menu.code,
         name: result.data.menu.name,
         classify: result.data.menu.classify,
+        category: result.data.menu.category,
         description: result.data.menu.description,
         unit: result.data.menu.unit,
         price: result.data.menu.price,
@@ -130,6 +131,34 @@ const ModalCreateMenu = ({
                   className="text-base"
                   type="number"
                 />
+              </Form.Item>
+              <label
+                htmlFor="category"
+                className="block text-sm font-bold mb-1"
+              >
+                Danh mục: <span className="text-red-500">*</span>
+              </label>
+              
+              <Form.Item
+                name="category"
+                style={{ marginBottom: 10 }}
+                rules={[
+                  {
+                    required: true,
+                    message: "Danh mục món ăn không được để trống!",
+                  },
+                ]}
+              >
+                <Select placeholder="--Chọn phân loại--" className="text-base">
+                  <Select.Option value="Bữa sáng">Bữa sáng</Select.Option>
+                  <Select.Option value="Bữa trưa">Bữa trưa</Select.Option>
+                  <Select.Option value="Bữa tối">Bữa tối</Select.Option>
+                  <Select.Option value="Ngày tết">Ngày tết</Select.Option>
+                  <Select.Option value="Noel">Noel</Select.Option>
+                  <Select.Option value="Tình nhân">Tình nhân</Select.Option>
+                  <Select.Option value="Gia đình">Gia đình</Select.Option>
+                  <Select.Option value="Lương về">Lương về</Select.Option>
+                </Select>
               </Form.Item>
             </Col>
             <Col span={12}>

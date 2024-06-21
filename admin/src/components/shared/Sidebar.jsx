@@ -2,10 +2,7 @@ import classNames from "classnames";
 import React from "react";
 import { assets } from "../../assets/assets";
 import { HiOutlineLogout } from "react-icons/hi";
-import {
-  DASHBOARD_SIDEBAR_LINKS,
-  DASHBOARD_SIDEBAR_BOTTOM_LINKS,
-} from "../../lib/consts/navigation";
+import { DASHBOARD_SIDEBAR_LINKS } from "../../lib/consts/navigation";
 import { logout } from "../../feature/user/userSlice.js";
 import { useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -27,9 +24,6 @@ function Sidebar() {
         ))}
       </div>
       <div className="flex flex-col gap-0.5 pt-2 border-t border-neutral-700">
-        {DASHBOARD_SIDEBAR_BOTTOM_LINKS.map((item) => (
-          <SidebarLink key={item.key} item={item} />
-        ))}
         <div
           className={classNames(linkClass, "cursor-pointer text-red-500")}
           onClick={() => {

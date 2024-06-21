@@ -71,11 +71,11 @@ export const send_reservation = async (req, res, next) => {
       );
     }
 
-    let table;
+    let tables;
     if (notes) {
       const matchingKeywords = findMatchingKeywords(notes);
-      table = await Table.findOne({
-        capacity: { $gte: guests },
+      tables = await Table.find({
+        capacity: tableCapacity,
         $or: [
           { location: { $regex: notes, $options: 'i' } },
           { location: { $in: matchingKeywords } },
@@ -83,19 +83,36 @@ export const send_reservation = async (req, res, next) => {
         status: 'Còn trống',
       }).sort({ capacity: 1 });
     }
-    if (!table) {
-      table = await Table.findOne({
-        capacity: { $gte: guests },
+    if (!tables || tables.length === 0) {
+      tables = await Table.find({
+        capacity: tableCapacity,
         status: 'Còn trống',
       }).sort({ capacity: 1 });
     }
-    if (!table) {
+
+    if (!tables || tables.length === 0) {
       return next(
         new ErrorHandler(
           'Hiện tại không còn bàn phù hợp. Vui lòng thử lại vào thời gian khác hoặc liên hệ nhà hàng để biết thêm chi tiết.',
           400
         )
       );
+    }
+
+    let availableTable;
+    for (const table of tables) {
+      const isTableReserved = await TableReservation.exists({
+        tableId: table.id_table,
+        reservationDate: reservationDateTime.toDate(),
+      });
+      if (!isTableReserved) {
+        availableTable = table;
+        break;
+      }
+    }
+
+    if (!availableTable) {
+      return next(new ErrorHandler('Bàn đã được đặt chỗ cho thời gian này. Vui lòng chọn thời gian khác.', 400));
     }
 
     console.log(`Reservation Date Time: ${reservationDateTime}`);
@@ -108,7 +125,7 @@ export const send_reservation = async (req, res, next) => {
       phone,
       guests,
       notes,
-      table: table.id_table,
+      table: availableTable.id_table,
       deposit: deposit || false,
       depositAmount: depositAmount || 0,
     });
@@ -117,32 +134,30 @@ export const send_reservation = async (req, res, next) => {
 
     const newTableReservation = new TableReservation({
       reservationId: savedReservation._id,
-      tableId: table.id_table,
+      tableId: availableTable.id_table,
       reservationDate: reservationDateTime,
       reservationTime: time,
     });
     await newTableReservation.save();
 
-    table.reservations = table.reservations || [];
-    table.reservations.push(savedReservation._id);
-    await table.save();
+    availableTable.reservations = availableTable.reservations || [];
+    availableTable.reservations.push(savedReservation._id);
+    await availableTable.save();
 
     // Lên lịch thay đổi trạng thái bàn vào đúng ngày và giờ đến
     schedule.scheduleJob(reservationDateTime.toDate(), async function () {
-      const tableToUpdate = await Table.findOne({ id_table: table.id_table });
-      console.log(`Scheduled Job Running for Table: ${table.id_table}`);
-      if (tableToUpdate) {
-        tableToUpdate.status = 'Chưa đặt cọc';
-        await tableToUpdate.save();
-        console.log(
-          `Bàn ${table.id_table} đã được cập nhật sang trạng thái 'Chưa đặt cọc'.`
-        );
-      }
+      const tableToUpdate = await Table.findOne({ id_table: availableTable.id_table });
+      console.log(`Bàn ${availableTable.id_table} đã được đặt chỗ.`);
+      tableToUpdate.status = deposit ? 'Đã đặt cọc' : 'Chưa đặt cọc';
+      await tableToUpdate.save()
+      console.log(
+        `Bàn ${availableTable.id_table} đã được cập nhật sang trạng thái '${tableToUpdate.status}'.`
+      );
     });
 
     const cancelTime = reservationDateTime.clone().add(3, 'minutes').toDate();
     console.log('Thời điểm đặt bàn:', reservationDateTime.toDate());
-    console.log('Thời điểm hủy đơn:', cancelTime);
+    console.log('Thời điểm hủy bàn:', cancelTime);
 
     // Lên lịch hủy đơn sau 3 phút
     schedule.scheduleJob(cancelTime, async function () {
@@ -216,17 +231,23 @@ export const editReservation = async (req, res) => {
     reservation.status = status;
     await reservation.save();
 
-    if (originalStatus === 'Đang hoạt động' && status === 'Đã hủy') {
-      const tableId = reservation.table;
-      const updatedTable = await Table.findOneAndUpdate(
-        { id_table: tableId },
-        { status: 'Còn trống' },
-        { new: true }
-      );
+    const tableId = reservation.table;
+    let tableStatus;
 
-      if (!updatedTable) {
-        return res.status(404).json({ message: 'Không tìm thấy thông tin bàn này!' });
-      }
+    if (originalStatus === 'Đang hoạt động' && status === 'Đã hủy') {
+      tableStatus = 'Còn trống';
+    } else if (originalStatus === 'Đã hủy' && status === 'Đang hoạt động') {
+      tableStatus = 'Đang sử dụng';
+    }
+
+    const updatedTable = await Table.findOneAndUpdate(
+      { id_table: tableId },
+      { status: tableStatus },
+      { new: true }
+    );
+
+    if (!updatedTable) {
+      return res.status(404).json({ message: 'Không tìm thấy thông tin bàn này!' });
     }
 
     return res.status(200).json({ message: 'Cập nhật đơn đặt bàn thành công.' });

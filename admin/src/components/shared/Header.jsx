@@ -132,7 +132,7 @@ export default function Header() {
                   </div>
                 )}
               </Menu.Item>
-              <Menu.Item>
+              {/* <Menu.Item>
                 {({ active }) => (
                   <div
                     onClick={() => navigate("/settings")}
@@ -144,7 +144,7 @@ export default function Header() {
                     Settings
                   </div>
                 )}
-              </Menu.Item>
+              </Menu.Item> */}
               <Menu.Item>
                 {({ active }) => (
                   <div

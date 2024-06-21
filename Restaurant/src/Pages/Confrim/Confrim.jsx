@@ -45,7 +45,7 @@ const Confirm = () => {
           withCredentials: true,
         }
       );
-      toast.success(data.message);
+      toast.success("Đặt bàn thành công!");
       navigate("/success");
     } catch (error) {
       console.error("Error:", error);
