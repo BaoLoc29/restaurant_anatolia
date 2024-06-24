@@ -1,0 +1,7 @@
+.custom-calendar .ant-picker-cell {
+  text-align: right;
+  padding: 10px;
+}
+.custom-calendar .ant-picker-content th {
+  text-align: right;
+}

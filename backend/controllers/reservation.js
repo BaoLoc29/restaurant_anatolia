@@ -5,6 +5,7 @@ import { Reservation } from "../models/reservation.js";
 import { TableReservation } from "../models/tableReservation.js"
 import Table from "../models/table.js";
 import joi from "joi";
+import dayjs from "dayjs";
 
 const synonymKeywords = {
   "Cạnh cửa sổ": ["gần cửa sổ", "sát cửa sổ", "view đẹp"],
@@ -101,9 +102,16 @@ export const send_reservation = async (req, res, next) => {
 
     let availableTable;
     for (const table of tables) {
+      const fifteenMinutesBefore = reservationDateTime.clone().subtract(15, 'minutes').toDate();
+      const fifteenMinutesAfter = reservationDateTime.clone().add(15, 'minutes').toDate();
+
       const isTableReserved = await TableReservation.exists({
         tableId: table.id_table,
-        reservationDate: reservationDateTime.toDate(),
+        // reservationDate: reservationDateTime.toDate(),
+        reservationDate: {
+          $gte: fifteenMinutesBefore,
+          $lte: fifteenMinutesAfter,
+        },
       });
       if (!isTableReserved) {
         availableTable = table;
@@ -112,7 +120,7 @@ export const send_reservation = async (req, res, next) => {
     }
 
     if (!availableTable) {
-      return next(new ErrorHandler('Bàn đã được đặt chỗ cho thời gian này. Vui lòng chọn thời gian khác.', 400));
+      return next(new ErrorHandler('Hiện tại không còn bàn phù hợp. Vui lòng thử lại vào thời gian khác hoặc liên hệ nhà hàng để biết thêm chi tiết.', 400));
     }
 
     console.log(`Reservation Date Time: ${reservationDateTime}`);
@@ -162,7 +170,7 @@ export const send_reservation = async (req, res, next) => {
     // Lên lịch hủy đơn sau 3 phút
     schedule.scheduleJob(cancelTime, async function () {
       const reservation = await Reservation.findById(savedReservation._id);
-      if (reservation && reservation.status === 'Đang hoạt động') {
+      if (reservation && reservation.status === 'Đã đặt trước') {
         reservation.status = 'Đã hủy';
         await reservation.save();
 
@@ -180,9 +188,16 @@ export const send_reservation = async (req, res, next) => {
       }
     });
 
-    res.status(201).json(savedReservation);
+    // return res.status(201).json(savedReservation);
+    return res.status(200).json({
+      message: 'Đặt chỗ thành công',
+      reservation: {
+        ...savedReservation.toObject(),
+        table: availableTable.id_table,
+      }
+    })
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 export const getPagingReservation = async (req, res) => {
@@ -208,10 +223,10 @@ export const editReservation = async (req, res) => {
     const editSchema = joi.object({
       status: joi.string()
         .required()
-        .valid('Đang hoạt động', 'Đã hủy')
+        .valid('Đã đặt trước', 'Đã hủy')
         .messages({
           'string.empty': 'Trạng thái đơn đặt bàn không được để trống!',
-          'any.only': "Trạng thái phải là 'Đang hoạt động' hoặc 'Đã hủy'",
+          'any.only': "Trạng thái phải là 'Đã đặt trước', 'Đang hoạt động' 'Đã hủy'",
         }),
     });
 
@@ -234,9 +249,9 @@ export const editReservation = async (req, res) => {
     const tableId = reservation.table;
     let tableStatus;
 
-    if (originalStatus === 'Đang hoạt động' && status === 'Đã hủy') {
+    if (originalStatus === 'Đã đặt trước' && status === 'Đã hủy') {
       tableStatus = 'Còn trống';
-    } else if (originalStatus === 'Đã hủy' && status === 'Đang hoạt động') {
+    } else if (originalStatus === 'Đã hủy' && status === 'Đã đặt trước') {
       tableStatus = 'Đang sử dụng';
     }
 
@@ -257,3 +272,72 @@ export const editReservation = async (req, res) => {
     return res.status(500).json({ message: 'Lỗi khi cập nhật đơn đặt bàn.' });
   }
 };
+export const getOrders = async (req, res) => {
+  try {
+    const { month, year } = req.query;
+    if (!month || !year) {
+      return res.status(400).json({ message: "Dữ liệu không hợp lệ!" })
+    }
+
+    // Đảm bảo tháng và năm lần lượt có hai chữ số và bốn chữ số
+    const monthString = month.padStart(2, '0');
+    const yearString = year.padStart(4, '0');
+
+    // Xác định khoảng thời gian bắt đầu và kết thúc của tháng
+    const startDate = moment(`${yearString}-${monthString}-01`, "YYYY-MM-DD").startOf('month').toDate();
+    const endDate = moment(`${yearString}-${monthString}-01`, "YYYY-MM-DD").endOf('month').toDate();
+
+    const orders = await Reservation.find({
+      date: {
+        $gte: startDate,
+        $lt: endDate
+      }
+    }).sort({ createdAt: "desc" });
+
+    return res.status(200).json({ orders })
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+export const getOrderByDate = async (req, res) => {
+  try {
+    const { date, pageSize, pageIndex } = req.query;
+
+    // Kiểm tra và log giá trị date
+    if (!date) {
+      return res.status(400).json({ message: "Dữ liệu không hợp lệ!" });
+    }
+
+    const formattedDate = dayjs(date).startOf('day').toDate();
+    const endDate = dayjs(date).endOf('day').toDate();
+
+    const orders = await Reservation.find({
+      date: {
+        $gte: formattedDate,
+        $lt: endDate
+      }
+    }).skip((pageIndex - 1) * pageSize)
+      .limit(parseInt(pageSize))
+      .sort({ createdAt: "desc" });
+
+    const countReservation = await Reservation.countDocuments({
+      date: {
+        $gte: formattedDate,
+        $lt: endDate
+      }
+    });
+
+    const totalPage = Math.ceil(countReservation / pageSize);
+
+    return res.status(200).json({ orders, totalPage, count: countReservation });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+// export const searchOrderByPhone = async (req, res) => {
+//   try {
+
+//   } catch (error) {
+//     return res.status(500).json({ message: error.message })
+//   }
+// }

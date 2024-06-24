@@ -5,7 +5,6 @@ const reservationSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, "Họ và tên là bắt buộc."],
-    minLength: [3, "Họ và tên phải ít nhất 3 ký tự."],
     maxLength: [30, "Họ và tên không được vượt quá 30 ký tự."],
   },
   date: {
@@ -85,7 +84,7 @@ const reservationSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    default: "Đang hoạt động"
+    default: "Đã đặt trước"
   },
   deposit: {
     type: Boolean,

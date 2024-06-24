@@ -74,11 +74,11 @@ const ModalCreateTable = ({
             rules={[
               {
                 required: true,
-                message: "Sức chứa của bàn không được để trống",
+                message: "Sức chứa của bàn không được để trống!",
               },
               {
                 pattern: /^([1-9]\d*)$/,
-                message: "Sức chứa của bàn phải từ 1 người trở lên",
+                message: "Sức chứa của bàn phải từ 1 người trở lên!",
               },
             ]}
           >

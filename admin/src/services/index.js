@@ -23,6 +23,7 @@ axiosInstanceAuth.interceptors.response.use(
             removeUserFromLocalStorage()
 
             window.location.href = "/"
+            window.location.reload();
         }
 
     }

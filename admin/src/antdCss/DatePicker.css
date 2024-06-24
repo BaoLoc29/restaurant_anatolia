@@ -1,0 +1,8 @@
+.ant-picker-panel {
+  display: flex !important;
+  justify-content: center !important;
+}
+
+.ant-picker-cell {
+  text-align: center;
+}

@@ -1,146 +1,275 @@
-import React, { useCallback, useEffect, useState } from "react";
-import moment from "moment";
-import { Table, Pagination, Switch, Button } from "antd";
-import { toast } from "react-hot-toast";
 import {
-  getPagingReservation,
-  editReservation,
+  Alert,
+  Badge,
+  Button,
+  Calendar,
+  Input,
+  Select,
+  Space,
+  Form,
+  Result,
+  Modal,
+} from "antd";
+import "../antdCss/Drawer.css";
+import moment from "moment";
+import { TiDelete } from "react-icons/ti";
+import { PlusOutlined } from "@ant-design/icons";
+import React, { useState, useCallback, useEffect } from "react";
+import dayjs from "dayjs";
+import DrawerCreateOrder from "./DrawerCreateOrder/index.jsx";
+import ModalListOrderDate from "./ModalListOrderDate/index.jsx";
+import {
+  createReservation,
+  getOrderByDate,
+  getOrders,
 } from "../services/reservation.js";
+
 const Orders = () => {
-  const [orders, setOrders] = useState([]);
+  const [order, setOrder] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
+  const [month, setMonth] = useState(dayjs().month() + 1);
+  const [year, setYear] = useState(dayjs().year());
+  const [value, setValue] = useState(() => dayjs());
+  const [selectedValue, setSelectedValue] = useState(() => dayjs());
+  const [drawerCreateOrder, setDrawerCreateOrder] = useState(false);
+  const [modalDetailOrder, setModalDetailOrder] = useState(false);
+  const [ordersForDate, setOrdersForDate] = useState([]);
+
+  const [pageSize, setPageSize] = useState(7);
   const [pageIndex, setPageIndex] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalDoc, setTotalDoc] = useState(0);
-  const columns = [
-    {
-      title: "Khách hàng",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Liên lạc",
-      dataIndex: "phone",
-      key: "phone",
-    },
-    {
-      title: "Số khách",
-      dataIndex: "guests",
-      key: "guests",
-      sorter: (a, b) => {
-        if (typeof a.guests === "number" && typeof b.guests === "number") {
-          return a.guests - b.guests;
-        }
-        return a.guests.localeCompare(b.guests);
-      },
-    },
+  const [form] = Form.useForm();
+  const [showResult, setShowResult] = useState(false);
+  const [errorMessages, setErrorMessages] = useState([]);
+  const [selectedTable, setSelectedTable] = useState("");
 
-    {
-      title: "Mã bàn",
-      dataIndex: "table",
-      key: "table",
-    },
-    {
-      title: "Ngày đến",
-      dataIndex: "date",
-      key: "date",
-      render: (text) => moment(text).format("DD/MM/YYYY"),
-    },
-    {
-      title: "Giờ đến",
-      dataIndex: "time",
-      key: "time",
-    },
-    {
-      title: "Đã đặt cọc",
-      dataIndex: "depositAmount",
-      key: "depositAmount",
-      render: (depositAmount) => {
-        if (typeof depositAmount === "number") {
-          return depositAmount.toLocaleString("vi-VN", {
-            style: "currency",
-            currency: "VND",
-          });
-        } else {
-          return "Invalid depositAmount";
-        }
-      },
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status, record) => {
-        return (
-          <Switch
-            checkedChildren="On"
-            unCheckedChildren="Off"
-            checked={status === "Đang hoạt động"}
-            onChange={(checked) => edit(record._id, checked)}
-          />
-        );
-      },
-    },
-  ];
+  const onSelect = (newValue) => {
+    setValue(newValue);
+    setSelectedValue(newValue);
+    setModalDetailOrder(true);
+  };
 
-  const getOrders = useCallback(async () => {
+  const onPanelChange = (newValue) => {
+    setValue(newValue);
+    setMonth(newValue.month() + 1);
+    setYear(newValue.year());
+  };
+
+  const monthCellRender = () => {
+    return null;
+  };
+
+  const dateCellRender = (value) => {
+    // Filter orders for the current date
+    const ordersForDateFiltered = order.filter(
+      (item) => item && dayjs(item.date).isSame(value, "date")
+    );
+
+    // Determine type based on date and time comparison
+    const listData = ordersForDateFiltered.map((item) => {
+      let type = "processing";
+      if (item.status === "Đã đặt trước") {
+        type = "processing";
+      } else if (item.status === "Đang hoạt động") {
+        type = "success";
+      } else if (item.status === "Đã hủy") {
+        type = "error";
+      } else if (item.status === "Thanh toán thất bại") {
+        type = "error";
+      }
+      return {
+        ...item,
+        type,
+      };
+    });
+    return (
+      <ul className="events">
+        {listData.map((item) => (
+          <li key={item._id}>
+            <Badge status={item.type} text={`Bàn ${item.table}`} />
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  const cellRender = (current, info) => {
+    if (info.type === "date") return dateCellRender(current);
+    if (info.type === "month") return monthCellRender(current);
+    return info.originNode;
+  };
+
+  const handelCloseModal = () => {
+    setModalDetailOrder(false);
+    // setSelectedValue(null);
+  };
+
+  const handleCloseDrawer = () => {
+    form.resetFields();
+    setDrawerCreateOrder(false);
+  };
+
+  const getReservation = useCallback(async () => {
     try {
       setLoading(true);
-      const result = await getPagingReservation({ pageSize, pageIndex });
-      setOrders(result.data.reservations);
-      setTotalPages(result.data.totalPages);
-      setTotalDoc(result.data.count);
+      const result = await getOrders({ month, year });
+      setOrder(result.data.orders);
     } catch (error) {
-      console.log(error);
+      console.log("Error fetching orders:", error);
     } finally {
       setLoading(false);
     }
-  }, [pageSize, pageIndex]);
+  }, [month, year]);
 
   useEffect(() => {
-    getOrders();
-  }, [getOrders]);
+    getReservation();
+  }, [getReservation]);
 
-  const edit = async (id, checked) => {
+  // Get List Order By Date
+  const getOrderDate = useCallback(async () => {
     try {
-      const status = checked ? "Đang hoạt động" : "Đã hủy";
-      const updatedOrders = orders.map((order) =>
-        order._id === id ? { ...order, status: status } : order
-      );
-      setOrders(updatedOrders);
-      await editReservation(id, { status });
-      toast.success("Cập nhật đơn đặt bàn thành công!");
+      setLoading(true);
+      const result = await getOrderByDate({
+        date: selectedValue,
+        pageSize,
+        pageIndex,
+      });
+      setOrdersForDate(result.data.orders);
+      setTotalPages(result.data.totalPages);
+      setTotalDoc(result.data.count);
+    } catch (error) {
+      console.log("Error fetching orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedValue, pageSize, pageIndex]);
+
+  useEffect(() => {
+    if (modalDetailOrder) {
+      getOrderDate();
+    }
+  }, [modalDetailOrder, selectedValue, getOrderDate]);
+
+  const handleCreateOrder = async (values) => {
+    try {
+      setLoading(true);
+      const { date, time, ...dataToSend } = values;
+      const formattedDate = moment(date).format("YYYY-MM-DD");
+      const formattedTime = moment(time, "HH:mm").format("HH:mm");
+      const dataToSendWithTime = {
+        ...dataToSend,
+        time: formattedTime,
+        date: formattedDate,
+        depositAmount: dataToSend.deposit ? 200000 : 0,
+      };
+
+      const result = await createReservation(dataToSendWithTime);
+      setOrder([result.data.savedReservation, ...order]);
+      const tableCode = result.data.reservation.table;
+      setSelectedTable(tableCode);
+      setShowResult(true);
+      setDrawerCreateOrder(false);
+      getReservation();
+      form.resetFields();
+      setTimeout(() => {
+        setShowResult(false);
+      }, 90000);
     } catch (error) {
       console.log(error);
-      toast.success("Cập nhật đơn đặt bàn thất bại!");
+      if (error.response && error.response.data && error.response.data.errors) {
+        const errorMessages = error.response.data.errors.map((err) => err.msg);
+        setErrorMessages(errorMessages);
+      } else {
+        setErrorMessages(["Đã xảy ra lỗi khi đặt bàn. Vui lòng thử lại sau."]);
+      }
+      setShowResult(true);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleCloseResultModal = () => {
+    setShowResult(false);
+    setErrorMessages("");
+  };
+
   return (
-    <div className="h-[37.45rem]">
-      <div className="flex justify-between items-center px-2 pb-4 pr-4 pl-4 pt-0">
+    <div className="h-full">
+      <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách đơn đặt bàn</h1>
-        <Button type="primary">Tạo đơn đặt bàn</Button>
+        <Space.Compact className="w-[32rem] relative">
+          <Select defaultValue="code" className="w-[10rem]" />
+          <Input placeholder="Nhập từ khóa tìm kiếm ...." />
+          <TiDelete className="text-gray-400 text-xl absolute top-1/2 right-2 transform -translate-y-1/2 cursor-pointer z-10" />
+        </Space.Compact>
+        <Button
+          type="primary"
+          onClick={() => setDrawerCreateOrder(true)}
+          icon={<PlusOutlined />}
+        >
+          Tạo đơn mới
+        </Button>
       </div>
-      <Table
+      <div className="px-3 bg-white">
+        <Alert
+          message={`Bạn đã chọn ngày ${selectedValue?.format("DD-MM-YYYY")}`}
+          className="absolute my-3"
+        />
+        <div className="custom-calendar">
+          <Calendar
+            value={value}
+            onSelect={onSelect}
+            onPanelChange={onPanelChange}
+            cellRender={cellRender}
+          />
+        </div>
+        <ModalListOrderDate
+          loading={loading}
+          title="Open"
+          isModalOpen={modalDetailOrder}
+          handleCancel={handelCloseModal}
+          selectedValue={selectedValue}
+          orders={ordersForDate}
+        />
+      </div>
+      <DrawerCreateOrder
+        form={form}
         loading={loading}
-        columns={columns}
-        dataSource={orders}
-        pagination={false}
+        title="Tạo đơn đặt bàn mới"
+        open={drawerCreateOrder}
+        onClose={handleCloseDrawer}
+        handleOk={handleCreateOrder}
       />
-      <Pagination
-        className="my-5 float-right"
-        defaultCurrent={1}
-        current={pageIndex}
-        total={totalDoc}
-        pageSize={pageSize}
-        totalPages={totalPages}
-        showSizeChanger
-        onChange={(pageIndex, pageSize) => {
-          setPageSize(pageSize);
-          setPageIndex(pageIndex);
-        }}
-      />
+      <Modal
+        visible={showResult}
+        footer={null}
+        onCancel={handleCloseResultModal}
+      >
+        {errorMessages.length > 0 ? (
+          <Result
+            status="error"
+            title="Đặt bàn không thành công"
+            subTitle={errorMessages.map((msg, index) => (
+              <p key={index}>{msg}</p>
+            ))}
+          />
+        ) : (
+          <Result
+            status="success"
+            title="Đặt bàn thành công!"
+            subTitle={
+              <span className="text-lg">
+                Bàn của quý khách là bàn{" "}
+                <strong className="text-red-500">{selectedTable}</strong>.{" "}
+                <br />
+                Cảm ơn quý khách đã tin tưởng. Chúc quý khách có bữa ăn ngon
+                miệng!
+              </span>
+            }
+          />
+        )}
+      </Modal>
     </div>
   );
 };

@@ -50,6 +50,7 @@ const Confirm = () => {
     } catch (error) {
       console.error("Error:", error);
       const errorMessage = error.response?.data?.message || "An error occurred";
+      console.log(error.response?.data?.message)
       setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
