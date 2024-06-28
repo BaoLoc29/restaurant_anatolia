@@ -3,16 +3,13 @@ import {
   Badge,
   Button,
   Calendar,
-  Input,
-  Select,
   Space,
   Form,
   Result,
   Modal,
+  Input,
 } from "antd";
 import "../antdCss/Drawer.css";
-import moment from "moment";
-import { TiDelete } from "react-icons/ti";
 import { PlusOutlined } from "@ant-design/icons";
 import React, { useState, useCallback, useEffect } from "react";
 import dayjs from "dayjs";
@@ -22,7 +19,9 @@ import {
   createReservation,
   getOrderByDate,
   getOrders,
+  searchReservation,
 } from "../services/reservation.js";
+import toast from "react-hot-toast";
 
 const Orders = () => {
   const [order, setOrder] = useState([]);
@@ -34,6 +33,8 @@ const Orders = () => {
   const [drawerCreateOrder, setDrawerCreateOrder] = useState(false);
   const [modalDetailOrder, setModalDetailOrder] = useState(false);
   const [ordersForDate, setOrdersForDate] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
 
   const [pageSize, setPageSize] = useState(7);
   const [pageIndex, setPageIndex] = useState(1);
@@ -41,9 +42,9 @@ const Orders = () => {
   const [totalDoc, setTotalDoc] = useState(0);
   const [form] = Form.useForm();
   const [showResult, setShowResult] = useState(false);
-  const [errorMessages, setErrorMessages] = useState([]);
+  const [errorMessage, setErrorMessage] = useState([]);
   const [selectedTable, setSelectedTable] = useState("");
-
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const onSelect = (newValue) => {
     setValue(newValue);
     setSelectedValue(newValue);
@@ -101,8 +102,10 @@ const Orders = () => {
   };
 
   const handelCloseModal = () => {
+    if (searchQuery.trim() !== "") {
+      setIsSearchModalOpen(false);
+    }
     setModalDetailOrder(false);
-    // setSelectedValue(null);
   };
 
   const handleCloseDrawer = () => {
@@ -151,21 +154,15 @@ const Orders = () => {
     }
   }, [modalDetailOrder, selectedValue, getOrderDate]);
 
-  const handleCreateOrder = async (values) => {
+  const handleCreateOrder = async (value) => {
     try {
       setLoading(true);
-      const { date, time, ...dataToSend } = values;
-      const formattedDate = moment(date).format("YYYY-MM-DD");
-      const formattedTime = moment(time, "HH:mm").format("HH:mm");
-      const dataToSendWithTime = {
+      const { confirm, ...dataToSend } = value;
+      const confirmValue = {
         ...dataToSend,
-        time: formattedTime,
-        date: formattedDate,
         depositAmount: dataToSend.deposit ? 200000 : 0,
       };
-
-      const result = await createReservation(dataToSendWithTime);
-      setOrder([result.data.savedReservation, ...order]);
+      const result = await createReservation(confirmValue);
       const tableCode = result.data.reservation.table;
       setSelectedTable(tableCode);
       setShowResult(true);
@@ -176,13 +173,11 @@ const Orders = () => {
         setShowResult(false);
       }, 90000);
     } catch (error) {
-      console.log(error);
-      if (error.response && error.response.data && error.response.data.errors) {
-        const errorMessages = error.response.data.errors.map((err) => err.msg);
-        setErrorMessages(errorMessages);
-      } else {
-        setErrorMessages(["Đã xảy ra lỗi khi đặt bàn. Vui lòng thử lại sau."]);
-      }
+      console.log("Error fetching orders:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Đặt bàn thất bại! Vui lòng kiểm tra lại!";
+      setErrorMessage(errorMessage);
       setShowResult(true);
     } finally {
       setLoading(false);
@@ -191,7 +186,23 @@ const Orders = () => {
 
   const handleCloseResultModal = () => {
     setShowResult(false);
-    setErrorMessages("");
+    setErrorMessage("");
+  };
+
+  const handleSearch = async () => {
+    try {
+      setLoading(true);
+      if (searchQuery.trim() !== "") {
+        const response = await searchReservation({ phone: searchQuery });
+        const searchResults = response.data.reservations;
+        setSearchResults(searchResults);
+        setIsSearchModalOpen(true);
+      }
+    } catch (error) {
+      toast.error("Không tìm thấy nguời dùng!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -199,9 +210,14 @@ const Orders = () => {
       <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách đơn đặt bàn</h1>
         <Space.Compact className="w-[32rem] relative">
-          <Select defaultValue="code" className="w-[10rem]" />
-          <Input placeholder="Nhập từ khóa tìm kiếm ...." />
-          <TiDelete className="text-gray-400 text-xl absolute top-1/2 right-2 transform -translate-y-1/2 cursor-pointer z-10" />
+          <Input
+            placeholder="Nhập ba số cuối của số điện thoại...."
+            maxLength={3}
+            className="text-sm w-[25rem]"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onPressEnter={handleSearch}
+            allowClear
+          />
         </Space.Compact>
         <Button
           type="primary"
@@ -226,11 +242,13 @@ const Orders = () => {
         </div>
         <ModalListOrderDate
           loading={loading}
-          title="Open"
-          isModalOpen={modalDetailOrder}
+          title={searchQuery.trim() !== "" ? "Kết quả tìm kiếm" : "Open"}
+          isModalOpen={
+            searchQuery.trim() !== "" ? isSearchModalOpen : modalDetailOrder
+          }
           handleCancel={handelCloseModal}
           selectedValue={selectedValue}
-          orders={ordersForDate}
+          orders={searchQuery.trim() !== "" ? searchResults : ordersForDate}
         />
       </div>
       <DrawerCreateOrder
@@ -246,13 +264,11 @@ const Orders = () => {
         footer={null}
         onCancel={handleCloseResultModal}
       >
-        {errorMessages.length > 0 ? (
+        {errorMessage ? (
           <Result
             status="error"
             title="Đặt bàn không thành công"
-            subTitle={errorMessages.map((msg, index) => (
-              <p key={index}>{msg}</p>
-            ))}
+            subTitle={errorMessage}
           />
         ) : (
           <Result

@@ -28,20 +28,12 @@ const findMatchingKeywords = (notes) => {
 };
 export const send_reservation = async (req, res, next) => {
   try {
-    const { name, email, date, time, phone, guests, notes, deposit, depositAmount } =
+    const { name, email, date, time, phone, guests, notes, deposit, depositAmount, status } =
       req.body;
-
-    if (!name || !email || !date || !time || !phone || !guests) {
-      return next(
-        new ErrorHandler('Vui lòng điền đầy đủ vào mẫu đặt chỗ!', 400)
-      );
-    }
 
     // Kiểm tra ngày và thời gian đặt chỗ
     const reservationDateTime = moment(`${date}T${time}`);
     const now = moment();
-
-    // Kiểm tra xem ngày đặt chỗ có phải là ngày hiện tại không
     const isToday = reservationDateTime.isSame(now, 'day');
 
     // Kiểm tra thời gian đặt chỗ phải sau thời điểm hiện tại nếu là ngày hiện tại
@@ -107,7 +99,6 @@ export const send_reservation = async (req, res, next) => {
 
       const isTableReserved = await TableReservation.exists({
         tableId: table.id_table,
-        // reservationDate: reservationDateTime.toDate(),
         reservationDate: {
           $gte: fifteenMinutesBefore,
           $lte: fifteenMinutesAfter,
@@ -133,6 +124,7 @@ export const send_reservation = async (req, res, next) => {
       phone,
       guests,
       notes,
+      status,
       table: availableTable.id_table,
       deposit: deposit || false,
       depositAmount: depositAmount || 0,
@@ -188,8 +180,8 @@ export const send_reservation = async (req, res, next) => {
       }
     });
 
-    // return res.status(201).json(savedReservation);
     return res.status(200).json({
+      success: true,
       message: 'Đặt chỗ thành công',
       reservation: {
         ...savedReservation.toObject(),
@@ -197,7 +189,7 @@ export const send_reservation = async (req, res, next) => {
       }
     })
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 export const getPagingReservation = async (req, res) => {
@@ -334,10 +326,25 @@ export const getOrderByDate = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 }
-// export const searchOrderByPhone = async (req, res) => {
-//   try {
+export const searchOrderByPhone = async (req, res) => {
+  try {
+    const { phone } = req.body;
 
-//   } catch (error) {
-//     return res.status(500).json({ message: error.message })
-//   }
-// }
+    if (!phone || phone < 3) {
+      return res.status(400).json({ message: "Vui lòng nhập số điện thoại hợp lệ!" });
+    }
+
+    const lastThreeDigits = phone.slice(-3); 
+    const searchField = { phone: { $regex: lastThreeDigits + '$', $options: 'i' } };
+    const reservations = await Reservation.find(searchField);
+
+    if (!reservations || reservations.length === 0) {
+      return res.status(404).json({ message: "Không tìm thấy người dùng!" });
+    }
+
+    return res.status(200).json({ reservations });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+

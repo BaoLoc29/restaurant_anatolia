@@ -43,25 +43,18 @@ const DrawerCreateOrder = ({
   };
 
   const disabledDate = (current) => {
-    // Không cho phép chọn ngày trong quá khứ hoặc hôm nay
+    // Disable past dates and today
     return current && current < moment().startOf("day");
   };
-  const disabledDateTime = () => {
-    if (date && moment(date).isSame(moment(), "day")) {
-      // Nếu ngày đã chọn là hôm nay, không cho phép chọn thời gian đã qua
-      return {
-        disabledHours: () => range(0, 24).splice(0, moment().hour()),
-        disabledMinutes: () => range(0, 60).splice(0, moment().minute()),
-      };
-    }
-    return {};
-  };
+
   const disabledHours = () => {
     if (date && moment(date).isSame(moment(), "day")) {
+      // Disable hours before current hour and outside business hours (8-22)
       return range(0, 24).filter(
         (hour) => hour < moment().hour() || hour < 8 || hour > 22
       );
     }
+    // Disable hours outside business hours (8-22)
     return range(0, 24).filter((hour) => hour < 8 || hour > 22);
   };
 
@@ -71,6 +64,7 @@ const DrawerCreateOrder = ({
       moment(date).isSame(moment(), "day") &&
       selectedHour === moment().hour()
     ) {
+      // Disable minutes before current minute if it's today and the selected hour is current hour
       return range(0, 60).filter((minute) => minute < moment().minute());
     }
     return [];
@@ -94,28 +88,30 @@ const DrawerCreateOrder = ({
         console.log("Validation failed:", errorInfo);
       });
   };
+
   return (
-    <Drawer title={title} width={750} onClose={onClose} open={open}>
+    <Drawer title={title} width={750} onClose={onClose} visible={open}>
       <Form
         form={form}
         layout="vertical"
         name="createOrderForm"
-        onFinish={handleOk}
+        onFinish={handleSubmit}
         initialValues={{
+          name: "AFHWA",
           email: "user@gmail.com",
+          phone: "0649497778",
+          guests: "413",
           deposit: false,
+          status: "Đang hoạt động",
         }}
       >
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="name"
-              label={<span className="font-bold">Tên khách hàng </span>}
+              label={<span className="font-bold">Tên khách hàng</span>}
               rules={[
-                {
-                  required: true,
-                  message: "Vui lòng nhập tên khách hàng!",
-                },
+                { required: true, message: "Vui lòng nhập tên khách hàng!" },
               ]}
             >
               <Input placeholder="Nhập tên khách hàng" />
@@ -177,12 +173,7 @@ const DrawerCreateOrder = ({
             <Form.Item
               name="date"
               label={<span className="font-bold">Ngày đến</span>}
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng chọn ngày đến!",
-                },
-              ]}
+              rules={[{ required: true, message: "Vui lòng chọn ngày đến!" }]}
             >
               <DatePicker
                 className="w-full"
@@ -196,12 +187,7 @@ const DrawerCreateOrder = ({
             <Form.Item
               name="time"
               label={<span className="font-bold">Giờ đến</span>}
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng chọn thời gian khách đến!",
-                },
-              ]}
+              rules={[{ required: true, message: "Vui lòng chọn giờ đến!" }]}
             >
               <TimePicker
                 className="w-full"
@@ -234,7 +220,7 @@ const DrawerCreateOrder = ({
             </Form.Item>
           </Col>
           <Col span={12}>
-            <div className="flex justify-between">
+            {/* <div className="flex justify-between">
               <img
                 src="https://becexamguide.com/wp-content/uploads/2020/10/logo-stripe.png"
                 alt="Stripe"
@@ -247,7 +233,24 @@ const DrawerCreateOrder = ({
                 width={170}
                 className="ml-[12rem] mt-0"
               />
-            </div>
+            </div> */}
+            <Form.Item
+              name="status"
+              label={<span className="font-bold">Trạng thái</span>}
+              rules={[
+                {
+                  required: true,
+                  message: "Hãy chọn một trạng thái đơn hàng!",
+                },
+              ]}
+            >
+              <Select placeholder="--Chọn trạng thái--" className="text-base">
+                <Select.Option value="Đã đặt trước">Đã đặt trước</Select.Option>
+                <Select.Option value="Đang hoạt động">
+                  Đang hoạt động
+                </Select.Option>
+              </Select>
+            </Form.Item>
           </Col>
         </Row>
         <Row gutter={16}>
@@ -264,9 +267,9 @@ const DrawerCreateOrder = ({
           </Col>
         </Row>
         <Space className="float-right">
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>Hủy bỏ</Button>
           <Button type="primary" onClick={handleSubmit} loading={loading}>
-            Submit
+            Đặt ngay
           </Button>
         </Space>
       </Form>
