@@ -59,6 +59,7 @@ const MenuComponent = () => {
       title: "Mã món ăn",
       dataIndex: "code",
       key: "code",
+      align: "center",
       sorter: (a, b) => {
         if (typeof a.code === "number" && typeof b.code === "number") {
           return a.code - b.code;
@@ -70,11 +71,13 @@ const MenuComponent = () => {
       title: "Tên món ăn",
       dataIndex: "name",
       key: "name",
+      align: "center",
     },
     {
       title: "Phân loại",
       dataIndex: "category",
       key: "category",
+      align: "center",
       filters: [
         {
           text: "Bữa sáng",
@@ -115,6 +118,7 @@ const MenuComponent = () => {
       title: "Giá tiền",
       dataIndex: "price",
       key: "price",
+      align: "center",
       render: (price) => {
         if (typeof price === "number") {
           return price.toLocaleString("vi-VN", {
@@ -130,11 +134,13 @@ const MenuComponent = () => {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
+      align: "center",
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      align: "center",
       render: (status) => {
         const colorMap = {
           "Còn món": "green",
@@ -146,9 +152,10 @@ const MenuComponent = () => {
     {
       title: "Hành động",
       key: "action",
+      align: "center",
       render: (row) => {
         return (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             <FaEdit
               className="text-blue-500 text-2xl hover:text-blue-700 cursor-pointer"
               onClick={() => handleOpenEditModal(row._id)}

@@ -10,49 +10,102 @@ const Confirm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const reservationData = location.state;
-  const [loading, setLoading] = useState(false);
-  const [formattedDate, setFormattedDate] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [depositOption, setDepositOption] = useState(null);
+  const [state, setState] = useState({
+    loading: false,
+    formattedDate: "",
+    errorMessage: "",
+    depositOption: null,
+  });
 
   useEffect(() => {
-    setErrorMessage("");
-    if (reservationData) {
-      setFormattedDate(formatDateToMMDDYYYY(reservationData.date));
-    }
+    setState((prevState) => ({
+      ...prevState,
+      errorMessage: "",
+      formattedDate: reservationData
+        ? formatDateToMMDDYYYY(reservationData.date)
+        : "",
+    }));
   }, [reservationData]);
+
   const handleConfirm = async () => {
-    if (depositOption === null) {
-      setErrorMessage("Bạn phải chọn một tùy chọn đặt cọc.");
+    if (state.depositOption === null) {
+      setState((prevState) => ({
+        ...prevState,
+        errorMessage: "Bạn phải chọn một tùy chọn đặt cọc.",
+      }));
       return;
     }
 
     const updatedReservationData = {
       ...reservationData,
-      deposit: depositOption === 2,
-      depositAmount: depositOption === 2 ? 200000 : 0,
+      deposit: state.depositOption === 2,
+      depositAmount: state.depositOption === 2 ? 200000 : 0,
     };
 
-    setLoading(true);
-    try {
-      const { data } = await axios.post(
-        "http://localhost:4000/reservation/send",
-        updatedReservationData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
+    if (state.depositOption === 2) {
+      setState((prevState) => ({ ...prevState, loading: true }));
+      try {
+        const { data } = await axios.post(
+          "http://localhost:4000/payment/create-checkout-session",
+          updatedReservationData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+        console.log("Stripe session URL:", data.session_url);
+        // Lưu session_url vào state để sử dụng khi cần thiết (nếu cần)
+        setState((prevState) => ({
+          ...prevState,
+          stripeSessionUrl: data.session_url,
+        }));
+        // Chuyển hướng người dùng đến trang thanh toán của Stripe
+        window.location.href = data.session_url;
+      } catch (error) {
+        console.error("Error:", error);
+        const errorMessage =
+          error.response?.data?.message ||
+          "Có lỗi xảy ra. Vui lòng thử lại sau.";
+        setState((prevState) => ({ ...prevState, errorMessage }));
+      } finally {
+        setState((prevState) => ({ ...prevState, loading: false }));
+      }
+    } else {
+      try {
+        setState((prevState) => ({ ...prevState, loading: true }));
+        // Gọi API để lưu dữ liệu đặt chỗ vào cơ sở dữ liệu
+        const { data } = await axios.post(
+          "http://localhost:4000/reservation/send",
+          updatedReservationData,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+            withCredentials: true,
+          }
+        );
+        if (data.success) {
+          // Sau khi lưu thành công, chuyển hướng đến trang success
+          navigate("/success");
+        } else {
+          const errorMessage =
+            data.message || "Có lỗi xảy ra. Vui lòng thử lại sau.";
+          setState((prevState) => ({ ...prevState, errorMessage }));
+          console.log(
+            "Server returned success: false with message:",
+            data.message
+          );
         }
-      );
-      toast.success("Đặt bàn thành công!");
-      navigate("/success");
-    } catch (error) {
-      console.error("Error:", error);
-      const errorMessage = error.response?.data?.message || "An error occurred";
-      setErrorMessage(errorMessage);
-    } finally {
-      setLoading(false);
+      } catch (error) {
+        const errorMessage =
+          error.response?.data?.message ||
+          "Có lỗi xảy ra. Vui lòng thử lại sau.";
+        setState((prevState) => ({ ...prevState, errorMessage }));
+      } finally {
+        setState((prevState) => ({ ...prevState, loading: false }));
+      }
     }
   };
 
@@ -69,7 +122,7 @@ const Confirm = () => {
 
   const formatDateToMMDDYYYY = (dateString) => {
     const [year, month, day] = dateString.split("-");
-    return `${day}/${month}/${year}`;
+    return ` ${day} /${month}/${year}`;
   };
 
   if (!reservationData) {
@@ -81,7 +134,11 @@ const Confirm = () => {
     <section className="confirm">
       <div className="container">
         <div className="confirm_box">
-          <img src="../../../public/logo_image.png" alt="" className="logo" />
+          <img
+            src="../../../public/logo_image.png"
+            alt="Logo"
+            className="logo"
+          />
           <h1>Xác Nhận Đặt Chỗ</h1>
           <p>
             Nếu bạn đặt cọc tối thiểu 200.000đ, bạn sẽ được giữ chỗ lâu hơn 30
@@ -89,41 +146,33 @@ const Confirm = () => {
           </p>
           <table className="confirm_details">
             <tbody>
-              <tr className="detail_item">
-                <th className="label">Họ và tên:</th>
-                <td>{reservationData.name}</td>
-              </tr>
-              <tr className="detail_item">
-                <th className="label">Email:</th>
-                <td>{reservationData.email}</td>
-              </tr>
-              <tr className="detail_item">
-                <th className="label">Điện thoại:</th>
-                <td>{reservationData.phone}</td>
-              </tr>
-              <tr className="detail_item">
-                <th className="label">Ngày:</th>
-                <td>{formattedDate}</td>
-              </tr>
-              <tr className="detail_item">
-                <th className="label">Giờ:</th>
-                <td>{reservationData.time}</td>
-              </tr>
-              <tr className="detail_item">
-                <th className="label">Số lượng khách:</th>
-                <td>{reservationData.guests}</td>
-              </tr>
-              <tr className="detail_item">
-                <th className="label">Ghi chú:</th>
-                <td>{reservationData.notes}</td>
-              </tr>
+              {[
+                ["Họ và tên", reservationData.name],
+                ["Email", reservationData.email],
+                ["Điện thoại", reservationData.phone],
+                ["Ngày", state.formattedDate],
+                ["Giờ", reservationData.time],
+                ["Số lượng khách", reservationData.guests],
+                ["Ghi chú", reservationData.notes],
+              ].map(([label, value], index) => (
+                <tr className="detail_item" key={index}>
+                  <th className="label">{label}:</th>
+                  <td>{value}</td>
+                </tr>
+              ))}
               <tr className="detail_item">
                 <th className="label">Đặt cọc</th>
                 <td>
                   <Radio.Group
                     name="radiogroup"
                     defaultValue={0}
-                    onChange={(e) => setDepositOption(e.target.value)}
+                    onChange={(e) =>
+                      setState((prevState) => ({
+                        ...prevState,
+                        depositOption: e.target.value,
+                        errorMessage: "", // Xóa thông báo lỗi khi thay đổi
+                      }))
+                    }
                   >
                     <Radio value={1}>Không cọc</Radio>
                     <Radio value={2}>Đặt cọc (200.000đ)</Radio>
@@ -132,13 +181,15 @@ const Confirm = () => {
               </tr>
             </tbody>
           </table>
-          <span className="error">{errorMessage}</span>
+          {state.errorMessage && (
+            <span className="error">{state.errorMessage}</span>
+          )}
           <div className="confirm_buttons">
             <button onClick={handleBack} className="back_button">
               Quay lại
             </button>
-            <button onClick={handleConfirm} disabled={loading}>
-              {loading ? "Đang xử lý..." : "Xác nhận"}
+            <button onClick={handleConfirm} disabled={state.loading}>
+              {state.loading ? "Đang xử lý..." : "Xác nhận"}
             </button>
           </div>
         </div>

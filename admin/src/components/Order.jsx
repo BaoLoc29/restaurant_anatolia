@@ -3,7 +3,6 @@ import {
   Badge,
   Button,
   Calendar,
-  Space,
   Form,
   Result,
   Modal,
@@ -11,12 +10,13 @@ import {
 } from "antd";
 import "../antdCss/Drawer.css";
 import { PlusOutlined } from "@ant-design/icons";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import DrawerCreateOrder from "./DrawerCreateOrder/index.jsx";
 import ModalListOrderDate from "./ModalListOrderDate/index.jsx";
 import {
   createReservation,
+  editReservation,
   getOrderByDate,
   getOrders,
   searchReservation,
@@ -24,7 +24,8 @@ import {
 import toast from "react-hot-toast";
 
 const Orders = () => {
-  const [order, setOrder] = useState([]);
+  const inputRef = useRef(null);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [month, setMonth] = useState(dayjs().month() + 1);
   const [year, setYear] = useState(dayjs().year());
@@ -36,10 +37,12 @@ const Orders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
+  /* eslint-disable no-unused-vars */
   const [pageSize, setPageSize] = useState(7);
   const [pageIndex, setPageIndex] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalDoc, setTotalDoc] = useState(0);
+  /* eslint-enable no-unused-vars */
   const [form] = Form.useForm();
   const [showResult, setShowResult] = useState(false);
   const [errorMessage, setErrorMessage] = useState([]);
@@ -63,17 +66,17 @@ const Orders = () => {
 
   const dateCellRender = (value) => {
     // Filter orders for the current date
-    const ordersForDateFiltered = order.filter(
+    const ordersForDateFiltered = orders.filter(
       (item) => item && dayjs(item.date).isSame(value, "date")
     );
 
     // Determine type based on date and time comparison
     const listData = ordersForDateFiltered.map((item) => {
-      let type = "processing";
+      let type = "";
       if (item.status === "Đã đặt trước") {
-        type = "processing";
-      } else if (item.status === "Đang hoạt động") {
         type = "success";
+      } else if (item.status === "Đang hoạt động") {
+        type = "processing";
       } else if (item.status === "Đã hủy") {
         type = "error";
       } else if (item.status === "Thanh toán thất bại") {
@@ -104,8 +107,11 @@ const Orders = () => {
   const handelCloseModal = () => {
     if (searchQuery.trim() !== "") {
       setIsSearchModalOpen(false);
+      handleClearSearch();
     }
     setModalDetailOrder(false);
+    setSearchQuery("");
+    inputRef.current?.input?.blur();
   };
 
   const handleCloseDrawer = () => {
@@ -117,7 +123,7 @@ const Orders = () => {
     try {
       setLoading(true);
       const result = await getOrders({ month, year });
-      setOrder(result.data.orders);
+      setOrders(result.data.orders);
     } catch (error) {
       console.log("Error fetching orders:", error);
     } finally {
@@ -163,22 +169,60 @@ const Orders = () => {
         depositAmount: dataToSend.deposit ? 200000 : 0,
       };
       const result = await createReservation(confirmValue);
-      const tableCode = result.data.reservation.table;
-      setSelectedTable(tableCode);
-      setShowResult(true);
-      setDrawerCreateOrder(false);
-      getReservation();
-      form.resetFields();
-      setTimeout(() => {
-        setShowResult(false);
-      }, 90000);
+      if (result.data?.success) {
+        const tableCode = result.data.reservation.table;
+        setSelectedTable(tableCode);
+        setShowResult(true);
+        setDrawerCreateOrder(false);
+        getReservation();
+        form.resetFields();
+        setTimeout(() => {
+          setShowResult(false);
+        }, 90000);
+        setErrorMessage("");
+        console.log(result.data?.success);
+      } else {
+        const errorMessage =
+          result.data.message || "Đặt bàn thất bại! Vui lòng kiểm tra lại!";
+        setErrorMessage(errorMessage);
+        setShowResult(true);
+      }
     } catch (error) {
-      console.log("Error fetching orders:", error);
       const errorMessage =
-        error.response?.data?.message ||
+        error.response.data?.message ||
         "Đặt bàn thất bại! Vui lòng kiểm tra lại!";
       setErrorMessage(errorMessage);
       setShowResult(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditReservation = async (id, status) => {
+    try {
+      setLoading(true);
+      const result = await editReservation(id, { status });
+      if (result.data.success) {
+        const updatedOrders = orders.map((order) =>
+          order._id === id ? { ...order, status } : order
+        );
+        setOrders(updatedOrders);
+        getReservation();
+        handelCloseModal();
+        toast.success("Cập nhật đơn đặt bàn thành công!");
+      } else {
+        const errorMessage =
+          result.data?.message || "Cập nhật thất bại! Vui lòng kiểm tra lại!";
+        setErrorMessage(errorMessage);
+        // setShowResult(true);
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      const errorMessage =
+        error.data?.message || "Cập nhật thất bại! Vui lòng kiểm tra lại!";
+      setErrorMessage(errorMessage);
+      // setShowResult(true);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -199,26 +243,30 @@ const Orders = () => {
         setIsSearchModalOpen(true);
       }
     } catch (error) {
-      toast.error("Không tìm thấy nguời dùng!");
+      toast.error("Không tìm thấy khách hàng này!");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
   };
 
   return (
     <div className="h-full">
       <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách đơn đặt bàn</h1>
-        <Space.Compact className="w-[32rem] relative">
-          <Input
-            placeholder="Nhập ba số cuối của số điện thoại...."
-            maxLength={3}
-            className="text-sm w-[25rem]"
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onPressEnter={handleSearch}
-            allowClear
-          />
-        </Space.Compact>
+        <Input
+          ref={inputRef}
+          placeholder="Nhập số điện thoại khách hàng...."
+          maxLength={10}
+          className="text-sm w-[25rem]"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onPressEnter={handleSearch}
+        />
         <Button
           type="primary"
           onClick={() => setDrawerCreateOrder(true)}
@@ -242,13 +290,16 @@ const Orders = () => {
         </div>
         <ModalListOrderDate
           loading={loading}
-          title={searchQuery.trim() !== "" ? "Kết quả tìm kiếm" : "Open"}
           isModalOpen={
-            searchQuery.trim() !== "" ? isSearchModalOpen : modalDetailOrder
+            searchQuery && searchQuery.trim() !== ""
+              ? isSearchModalOpen
+              : modalDetailOrder
           }
           handleCancel={handelCloseModal}
           selectedValue={selectedValue}
           orders={searchQuery.trim() !== "" ? searchResults : ordersForDate}
+          searchQuery={searchQuery}
+          handleEditReservation={handleEditReservation}
         />
       </div>
       <DrawerCreateOrder
@@ -259,16 +310,12 @@ const Orders = () => {
         onClose={handleCloseDrawer}
         handleOk={handleCreateOrder}
       />
-      <Modal
-        visible={showResult}
-        footer={null}
-        onCancel={handleCloseResultModal}
-      >
+      <Modal open={showResult} footer={null} onCancel={handleCloseResultModal}>
         {errorMessage ? (
           <Result
             status="error"
-            title="Đặt bàn không thành công"
-            subTitle={errorMessage}
+            title="Đặt bàn không thành công!"
+            subTitle={<span className="text-lg">{errorMessage}</span>}
           />
         ) : (
           <Result
@@ -279,7 +326,7 @@ const Orders = () => {
                 Bàn của quý khách là bàn{" "}
                 <strong className="text-red-500">{selectedTable}</strong>.{" "}
                 <br />
-                Cảm ơn quý khách đã tin tưởng. Chúc quý khách có bữa ăn ngon
+                Cảm ơn quý khách đã tin tưởng. Chúc quý khách có một bữa ăn ngon
                 miệng!
               </span>
             }

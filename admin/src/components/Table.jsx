@@ -59,6 +59,7 @@ const TableComponent = () => {
       title: "Mã bàn",
       dataIndex: "id_table",
       key: "id_table",
+      align: "center",
       sorter: (a, b) => {
         if (typeof a.id_table === "number" && typeof b.id_table === "number") {
           return a.id_table - b.id_table;
@@ -70,12 +71,14 @@ const TableComponent = () => {
       title: "Sức chứa",
       dataIndex: "capacity",
       key: "capacity",
+      align: "center",
       sorter: (a, b) => a.capacity - b.capacity,
     },
     {
       title: "Vị trí bàn",
       dataIndex: "location",
       key: "location",
+      align: "center",
       filters: [
         {
           text: "Trung tâm",
@@ -96,11 +99,13 @@ const TableComponent = () => {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
+      align: "center",
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
+      align: "center",
       render: (status) => {
         const colorMap = {
           "Còn trống": "red",
@@ -114,9 +119,10 @@ const TableComponent = () => {
     {
       title: "Hành động",
       key: "action",
+      align: "center",
       render: (row) => {
         return (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             <FaEdit
               className="text-blue-500 text-2xl hover:text-blue-700 cursor-pointer"
               onClick={() => handleOpenEditModal(row._id)}

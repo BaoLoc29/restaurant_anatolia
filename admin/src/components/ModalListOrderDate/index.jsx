@@ -1,6 +1,5 @@
-import React from "react";
-import { FaEdit } from "react-icons/fa";
-import { Modal, Pagination, Table, Tag } from "antd";
+import React, { useState } from "react";
+import { Button, Modal, Pagination, Select, Table } from "antd";
 
 const ModalListOrderDate = ({
   isModalOpen,
@@ -12,17 +11,36 @@ const ModalListOrderDate = ({
   pageSize,
   totalDoc,
   searchResults,
+  searchQuery,
+  handleEditReservation,
 }) => {
+  const [updatedStatus, setUpdatedStatus] = useState({});
+
+  const handleStatusChange = (recordId, newStatus) => {
+    setUpdatedStatus({
+      ...updatedStatus,
+      [recordId]: newStatus,
+    });
+  };
+
+  const handleUpdateStatus = () => {
+    Object.keys(updatedStatus).forEach((recordId) => {
+      handleEditReservation(recordId, updatedStatus[recordId]);
+    });
+    setUpdatedStatus({});
+  };
   const columns = [
     {
       title: "Khách hàng",
       dataIndex: "name",
       key: "name",
+      align: "center",
     },
     {
       title: "Liên lạc",
       dataIndex: "phone",
       key: "phone",
+      align: "center",
     },
     {
       title: "Số khách",
@@ -34,11 +52,13 @@ const ModalListOrderDate = ({
       title: "Mã bàn",
       dataIndex: "table",
       key: "table",
+      align: "center",
     },
     {
-      title: "Ngày đặt",
+      title: "Ngày đến",
       dataIndex: "date",
       key: "date",
+      align: "center",
       sorter: (a, b) => {
         if (typeof a.date === "string" && typeof b.date === "string") {
           return new Date(a.date) - new Date(b.date);
@@ -54,6 +74,7 @@ const ModalListOrderDate = ({
       title: "Giờ đến",
       dataIndex: "time",
       key: "time",
+      align: "center",
       sorter: (a, b) => {
         const timeA = new Date(`1970-01-01T${a.time}`);
         const timeB = new Date(`1970-01-01T${b.time}`);
@@ -81,40 +102,33 @@ const ModalListOrderDate = ({
       dataIndex: "status",
       key: "status",
       align: "center",
-      render: (status) => {
-        const colorMap = {
-          "Đã đặt trước": "blue",
-          "Đang hoạt động": "green",
-          "Đã hủy": "red",
-          "Thanh toán thất bại": "red",
-        };
-        return <Tag color={colorMap[status]}>{status}</Tag>;
-      },
-    },
-    {
-      title: "Hành động",
-      key: "action",
-      render: (row) => {
-        return (
-          <div className="flex gap-2 justify-center">
-            <FaEdit
-              className="text-blue-500 text-2xl hover:text-blue-700 cursor-pointer"
-              // onClick={() => handleOpenEditModal(row._id)}
-            />
-          </div>
-        );
-      },
+      render: (status, record) => (
+        <Select
+          placeholder="--Lựa chọn đặt cọc--"
+          className="text-base w-[9rem]"
+          value={updatedStatus[record._id] || status}
+          onChange={(newStatus) => handleStatusChange(record._id, newStatus)}
+        >
+          <Select.Option value="Đã đặt trước">Đã đặt trước</Select.Option>
+          <Select.Option value="Đang hoạt động">Đang hoạt động</Select.Option>
+          <Select.Option value="Đã hủy">Đã hủy</Select.Option>
+        </Select>
+      ),
     },
   ];
-
   return (
     <Modal
       title={
-        searchResults && searchResults.length > 0
-          ? "Danh sách kết quả tìm kiếm"
-          : `Danh sách đơn đặt bàn ngày ${selectedValue?.format("DD-MM-YYYY")}`
+        searchQuery ? (
+          <span>
+            Kết quả tìm kiếm cho số điện thoại có đuôi là{" "}
+            <span className="text-red-500">"{searchQuery}"</span>
+          </span>
+        ) : (
+          `Danh sách đơn đặt bàn ngày ${selectedValue?.format("DD-MM-YYYY")}`
+        )
       }
-      visible={isModalOpen}
+      open={isModalOpen}
       onCancel={handleCancel}
       footer={null}
       width={1000}
@@ -132,7 +146,7 @@ const ModalListOrderDate = ({
         }
         pagination={false}
       />
-      <div className="flex justify-end mt-4">
+      <div className="flex mt-4 justify-end space-x-2">
         <Pagination
           defaultCurrent={1}
           current={pageIndex}
@@ -140,6 +154,9 @@ const ModalListOrderDate = ({
           pageSize={pageSize}
           showSizeChanger
         />
+        <Button type="primary" onClick={handleUpdateStatus}>
+          Cập nhật
+        </Button>
       </div>
     </Modal>
   );

@@ -38,12 +38,10 @@ export const send_reservation = async (req, res, next) => {
 
     // Kiểm tra thời gian đặt chỗ phải sau thời điểm hiện tại nếu là ngày hiện tại
     if (isToday && reservationDateTime.isBefore(now)) {
-      return next(
-        new ErrorHandler(
-          'Thời gian đặt chỗ phải từ thời điểm hiện tại trở đi đối với ngày hiện tại.',
-          400
-        )
-      );
+      return res.status(200).json({
+        success: false,
+        message: 'Thời gian đặt chỗ phải từ thời điểm hiện tại trở đi đối với ngày hiện tại.',
+      })
     }
 
     let tableCapacity;
@@ -56,12 +54,10 @@ export const send_reservation = async (req, res, next) => {
     } else if (guests >= 9 && guests <= 12) {
       tableCapacity = 12;
     } else {
-      return next(
-        new ErrorHandler(
-          'Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để biết thêm chi tiết.',
-          400
-        )
-      );
+      return res.status(200).json({
+        success: false,
+        message: 'Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để biết thêm chi tiết.',
+      })
     }
 
     let tables;
@@ -73,23 +69,21 @@ export const send_reservation = async (req, res, next) => {
           { location: { $regex: notes, $options: 'i' } },
           { location: { $in: matchingKeywords } },
         ],
-        status: 'Còn trống',
+        // status: 'Còn trống',
       }).sort({ capacity: 1 });
     }
     if (!tables || tables.length === 0) {
       tables = await Table.find({
         capacity: tableCapacity,
-        status: 'Còn trống',
+        // status: 'Còn trống',
       }).sort({ capacity: 1 });
     }
 
     if (!tables || tables.length === 0) {
-      return next(
-        new ErrorHandler(
-          'Hiện tại không còn bàn phù hợp. Vui lòng thử lại vào thời gian khác hoặc liên hệ nhà hàng để biết thêm chi tiết.',
-          400
-        )
-      );
+      return res.status(200).json({
+        success: false,
+        message: 'Hiện tại không còn bàn phù hợp. Vui lòng thử lại hoặc liên hệ nhà hàng để biết thêm chi tiết.',
+      })
     }
 
     let availableTable;
@@ -111,7 +105,10 @@ export const send_reservation = async (req, res, next) => {
     }
 
     if (!availableTable) {
-      return next(new ErrorHandler('Hiện tại không còn bàn phù hợp. Vui lòng thử lại vào thời gian khác hoặc liên hệ nhà hàng để biết thêm chi tiết.', 400));
+      return res.status(200).json({
+        success: false,
+        message: 'Hiện tại không còn bàn phù hợp. Vui lòng thử lại hoặc liên hệ nhà hàng để biết thêm chi tiết.',
+      })
     }
 
     console.log(`Reservation Date Time: ${reservationDateTime}`);
@@ -142,17 +139,25 @@ export const send_reservation = async (req, res, next) => {
 
     availableTable.reservations = availableTable.reservations || [];
     availableTable.reservations.push(savedReservation._id);
+
+    if (savedReservation.status === 'Đang hoạt động') {
+      availableTable.status = 'Đang sử dụng';
+    }
     await availableTable.save();
 
     // Lên lịch thay đổi trạng thái bàn vào đúng ngày và giờ đến
     schedule.scheduleJob(reservationDateTime.toDate(), async function () {
       const tableToUpdate = await Table.findOne({ id_table: availableTable.id_table });
-      console.log(`Bàn ${availableTable.id_table} đã được đặt chỗ.`);
-      tableToUpdate.status = deposit ? 'Đã đặt cọc' : 'Chưa đặt cọc';
-      await tableToUpdate.save()
-      console.log(
-        `Bàn ${availableTable.id_table} đã được cập nhật sang trạng thái '${tableToUpdate.status}'.`
-      );
+
+      if (tableToUpdate.status !== 'Đang sử dụng') {
+        tableToUpdate.status = deposit ? 'Đã đặt cọc' : 'Chưa đặt cọc';
+        await tableToUpdate.save()
+        console.log(
+          `Bàn ${availableTable.id_table} đã được cập nhật sang trạng thái '${tableToUpdate.status}'.`
+        );
+      } else {
+        console.log(`Bàn ${availableTable.id_table} đang trong trạng thái 'Đang sử dụng', không thay đổi trạng thái tự động.`);
+      }
     });
 
     const cancelTime = reservationDateTime.clone().add(3, 'minutes').toDate();
@@ -182,14 +187,14 @@ export const send_reservation = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Đặt chỗ thành công',
+      message: 'Đặt bàn thành công!',
       reservation: {
         ...savedReservation.toObject(),
         table: availableTable.id_table,
       }
     })
   } catch (error) {
-    next(error);
+    return res.status(500).json({ message: error.message })
   }
 };
 export const getPagingReservation = async (req, res) => {
@@ -215,7 +220,7 @@ export const editReservation = async (req, res) => {
     const editSchema = joi.object({
       status: joi.string()
         .required()
-        .valid('Đã đặt trước', 'Đã hủy')
+        .valid('Đã đặt trước', 'Đang hoạt động', 'Đã hủy')
         .messages({
           'string.empty': 'Trạng thái đơn đặt bàn không được để trống!',
           'any.only': "Trạng thái phải là 'Đã đặt trước', 'Đang hoạt động' 'Đã hủy'",
@@ -224,14 +229,18 @@ export const editReservation = async (req, res) => {
 
     const { error } = editSchema.validate({ status });
     if (error) {
-      return res.status(400).json({
+      return res.status(200).json({
+        success: false,
         error: error.details.map((e) => e.message),
       });
     }
 
     const reservation = await Reservation.findById(id);
     if (!reservation) {
-      return res.status(404).json({ message: 'Không tìm thấy đơn đặt bàn này!' });
+      return res.status(200).json({
+        success: false,
+        message: 'Không tìm thấy đơn đặt bàn này!'
+      });
     }
 
     const originalStatus = reservation.status;
@@ -243,8 +252,10 @@ export const editReservation = async (req, res) => {
 
     if (originalStatus === 'Đã đặt trước' && status === 'Đã hủy') {
       tableStatus = 'Còn trống';
-    } else if (originalStatus === 'Đã hủy' && status === 'Đã đặt trước') {
+    } else if (originalStatus === 'Đã hủy' && status === 'Đang hoạt động') {
       tableStatus = 'Đang sử dụng';
+    } else if (originalStatus === 'Đang hoạt động' && status === 'Đã hủy') {
+      tableStatus = 'Còn trống';
     }
 
     const updatedTable = await Table.findOneAndUpdate(
@@ -254,14 +265,17 @@ export const editReservation = async (req, res) => {
     );
 
     if (!updatedTable) {
-      return res.status(404).json({ message: 'Không tìm thấy thông tin bàn này!' });
+      return res.status(200).json({
+        success: false,
+        message: 'Không tìm thấy đơn đặt bàn này!'
+      });
     }
 
-    return res.status(200).json({ message: 'Cập nhật đơn đặt bàn thành công.' });
+    return res.status(200).json({ success: true, message: 'Cập nhật đơn đặt bàn thành công.' });
 
   } catch (error) {
     console.error('Lỗi khi cập nhật đơn đặt bàn:', error);
-    return res.status(500).json({ message: 'Lỗi khi cập nhật đơn đặt bàn.' });
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 export const getOrders = async (req, res) => {
@@ -330,12 +344,10 @@ export const searchOrderByPhone = async (req, res) => {
   try {
     const { phone } = req.body;
 
-    if (!phone || phone < 3) {
+    if (!phone || phone < 10) {
       return res.status(400).json({ message: "Vui lòng nhập số điện thoại hợp lệ!" });
     }
-
-    const lastThreeDigits = phone.slice(-3); 
-    const searchField = { phone: { $regex: lastThreeDigits + '$', $options: 'i' } };
+    const searchField = { phone: { $regex: phone + '$', $options: 'i' } };
     const reservations = await Reservation.find(searchField);
 
     if (!reservations || reservations.length === 0) {

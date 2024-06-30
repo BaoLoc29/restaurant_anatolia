@@ -3,7 +3,6 @@ import { axiosInstanceAuth } from "./index";
 const createReservation = (data) => {
     return axiosInstanceAuth.post('/reservation/send', data);
 }
-
 const getPagingReservation = ({ pageSize, pageIndex }) => {
     return axiosInstanceAuth.get(`/reservation/get-paging-reservation?pageSize=${pageSize}&pageIndex=${pageIndex}`);
 }

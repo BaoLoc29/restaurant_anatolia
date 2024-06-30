@@ -13,7 +13,7 @@ const cancel_url = `${frontend_url}/payment-cancel`;
 
 const createCheckoutSession = async (req, res) => {
     const { name, email, phone, date, time, guests, notes, deposit } = req.body;
-    console.log("Received data:", { name, email, phone, date, time, guests, notes, deposit });
+    console.log("Nhận dữ liệu:", { name, email, phone, date, time, guests, notes, deposit });
 
     try {
         if (deposit) {
@@ -46,7 +46,7 @@ const createCheckoutSession = async (req, res) => {
                 },
             });
 
-            console.log("Stripe session created:", session.url);
+            console.log("Phiên Stripe được tạo:", session.url);
             res.json({ success: true, session_url: session.url });
         } else {
             const newReservation = new Reservation({
@@ -57,19 +57,19 @@ const createCheckoutSession = async (req, res) => {
                 time,
                 guests,
                 notes,
-                table: "SomeTableIdentifier",
-                status: "Đang hoạt động",
+                table,
+                status: "Đã đặt trước",
                 deposit: false,
                 depositAmount: 0,
             });
             await newReservation.save();
-            console.log("Reservation saved successfully.");
+            console.log("Lưu đặt chỗ thành công!");
 
-            res.json({ success: true, message: 'Reservation created successfully' });
+            res.json({ success: true, message: 'Đặt chỗ thành công!' });
         }
     } catch (error) {
-        console.error("Error during checkout session creation:", error);
-        res.status(500).json({ success: false, message: 'Error creating reservation or session' });
+        console.error("Lỗi trong quá trình tạo phiên thanh toán:", error);
+        res.status(500).json({ success: false, message: 'Lỗi tạo đặt chỗ hoặc phiên thanh toán' });
     }
 };
 
@@ -79,9 +79,9 @@ const handleStripeWebhook = async (req, res) => {
     let event;
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-        console.log("Event verified:", event);
+        console.log("Xác minh sự kiện:", event);
     } catch (err) {
-        console.log(`⚠️  Webhook signature verification failed.`, err.message);
+        console.log(`⚠️  Xác minh chữ ký webhook thất bại.`, err.message);
         return res.sendStatus(400);
     }
 
@@ -93,7 +93,7 @@ const handleStripeWebhook = async (req, res) => {
             await handlePaymentFailed(event.data.object);
             break;
         default:
-            console.log(`Unhandled event type ${event.type}`);
+            console.log(`Loại sự kiện không xử lý: ${event.type}`);
     }
 
     res.status(200).end();
@@ -111,15 +111,15 @@ const handlePaymentSuccess = async (session) => {
             time,
             guests,
             notes,
-            table: "SomeTableIdentifier",
-            status: "Đang hoạt động",
+            table,
+            status: "Đã đặt trước",
             deposit: true,
             depositAmount: 200000,
         });
         await newReservation.save();
-        console.log("Reservation saved successfully after payment.");
+        console.log("Lưu đặt chỗ thành công sau khi thanh toán.");
     } catch (error) {
-        console.error("Error saving reservation after payment:", error);
+        console.error("Lỗi lưu đặt chỗ sau khi thanh toán:", error);
     }
 };
 
@@ -134,7 +134,6 @@ const handlePaymentFailed = async (session) => {
         return;
     }
 
-    // Lấy thông tin từ billing_details của payment_method
     const { billing_details } = payment_method;
     const email = billing_details.email || "Null";
     const name = billing_details.name || "Null";
@@ -167,4 +166,5 @@ const handlePaymentFailed = async (session) => {
         console.error("Lỗi khi lưu đặt chỗ sau khi thanh toán thất bại:", error.message);
     }
 };
+
 export { createCheckoutSession, handleStripeWebhook };
