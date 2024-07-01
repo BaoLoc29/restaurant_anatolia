@@ -14,7 +14,7 @@ function Sidebar() {
   const dispatch = useDispatch();
 
   return (
-    <div className="flex flex-col bg-neutral-900 w-60 p-3 text-white">
+    <div className="flex flex-col bg-neutral-900 w-60 p-3 text-white h-[60rem]">
       <div className="flex items-center gap-2 px-5 pt-4 pb-7 border-b border-neutral-700">
         <img src={assets.logo_image} alt="logo" height={64} width={180} />
       </div>

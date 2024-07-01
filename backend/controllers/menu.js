@@ -1,5 +1,6 @@
 import Menu from "../models/menu.js";
 import joi from "joi"
+import moment from 'moment';
 const formatCreatedAt = (date) => {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -245,5 +246,23 @@ export const searchMenu = async (req, res) => {
         return res.status(200).json({ menus: formattedMenus });
     } catch (error) {
         return res.status(500).json({ message: error.message })
+    }
+}
+export const getAllMenu = async (req, res) => {
+    try {
+        const menus = await Menu.find().sort({ createdAt: "desc" })
+
+        const totalMenu = await Menu.countDocuments();
+
+        // Tính ngày hiện tại và ngày của 7 ngày trước
+        const sevenDaysAgo = moment().subtract(7, 'days').toDate();
+
+        // Đếm số nhân viên được thêm vào trong 7 ngày gần nhất
+        const recentMenu = await Menu.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+
+
+        return res.status(200).json({ menus, totalMenu, recentMenu });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 }

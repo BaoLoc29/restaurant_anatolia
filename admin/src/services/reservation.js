@@ -12,6 +12,9 @@ const editReservation = (id, data) => {
 const getOrders = ({ month, year }) => {
     return axiosInstanceAuth.get(`/reservation/get-orders?month=${month}&year=${year}`)
 }
+const getReservation = () => {
+    return axiosInstanceAuth.get("/reservation/get-all-reservation/")
+}
 const getOrderByDate = ({ date, pageSize, pageIndex }) => {
     return axiosInstanceAuth.get(`/reservation/get-order-by-date?date=${date}&pageSize=${pageSize}&pageIndex=${pageIndex}`)
 }
@@ -20,9 +23,11 @@ const searchReservation = ({ phone }) => {
 }
 export {
     getPagingReservation,
+    getReservation,
     editReservation,
     getOrders,
     getOrderByDate,
     createReservation,
     searchReservation
+
 }

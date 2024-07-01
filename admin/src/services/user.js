@@ -25,6 +25,9 @@ const changePassword = (userId, oldPassword, newPassword) => {
 const getPagingUser = ({ pageSize, pageIndex }) => {
     return axiosInstanceAuth.get(`/user/get-paging-user?pageSize=${pageSize}&pageIndex=${pageIndex}`);
 }
+const getTotalUser = () => {
+    return axiosInstanceAuth.get("/user/get-total-user/")
+}
 const searchUser = (keyword, option) => {
     return axiosInstanceAuth.post('/user/search-user', { keyword, option });
 }
@@ -37,5 +40,6 @@ export {
     changePassword,
     getPagingUser,
     getUserById,
-    searchUser
+    searchUser,
+    getTotalUser
 }

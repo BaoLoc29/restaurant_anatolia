@@ -19,12 +19,11 @@ axiosInstanceAuth.interceptors.response.use(
     },
     (error) => {
         if (error.response.status === 401) {
-            removeTokenFromLocalStorage()
-            removeUserFromLocalStorage()
-
-            window.location.href = "/"
-            window.location.reload();
+            removeTokenFromLocalStorage();
+            removeUserFromLocalStorage();
+            window.dispatchEvent(new Event('sessionExpired'));
         }
+        return Promise.reject(error);
 
     }
 )

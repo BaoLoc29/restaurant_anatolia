@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useSelector } from "react-redux";
@@ -12,11 +13,36 @@ import Profile from "./components/Profile.jsx";
 import Employee from "./components/Employee.jsx";
 import Table from "./components/Table.jsx";
 import Menu from "./components/Menu.jsx";
-function App() {
+import SessionExpiredPopup from "../src/components/SessionExpiredPopup/index.jsx";
+
+const App = () => {
   const user = useSelector((state) => state.users.user);
+  const [isPopupVisible, setPopupVisible] = useState(false);
+
+  const handlePopupClose = () => {
+    setPopupVisible(false);
+    window.location.href = "/";
+  };
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setPopupVisible(true);
+    };
+
+    window.addEventListener("sessionExpired", handleSessionExpired);
+
+    return () => {
+      window.removeEventListener("sessionExpired", handleSessionExpired);
+    };
+  }, []);
+
   return (
     <>
       <Toaster />
+      <SessionExpiredPopup
+        visible={isPopupVisible}
+        onClose={handlePopupClose}
+      />
       <Routes>
         {isObjctEmpty(user) ? (
           <Route path="/" element={<NonAuthLayout />}>
@@ -37,6 +63,6 @@ function App() {
       </Routes>
     </>
   );
-}
+};
 
 export default App;

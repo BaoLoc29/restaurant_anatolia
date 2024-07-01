@@ -15,6 +15,9 @@ const getPagingMenu = ({ pageSize, pageIndex }) => {
 const getMenuById = (menuId) => {
     return axiosInstanceAuth.get(`/menu/${menuId}`)
 }
+const getAllMenu = () => {
+    return axiosInstanceAuth.get("/menu/get-all-menu")
+}
 const searchMenu = (keyword, option) => {
     return axiosInstanceAuth.post('/menu/search-menu', { keyword, option });
 }
@@ -23,6 +26,7 @@ export {
     editMenu,
     deleteMenu,
     getPagingMenu,
+    getAllMenu,
     getMenuById,
     searchMenu
 }

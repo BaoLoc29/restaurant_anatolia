@@ -1,111 +1,118 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { getOrderStatus } from "../lib/utils";
-import { format } from "date-fns";
-const recentOrderData = [
-  {
-    id: "1",
-    product_id: "4324",
-    customer_id: "23143",
-    customer_name: "Shirley A. Lape",
-    order_date: "2022-05-17T03:24:00",
-    order_total: "$435.50",
-    current_order_status: "PLACED",
-    shipment_address: "Cottage Grove, OR 97424",
-  },
-  {
-    id: "7",
-    product_id: "7453",
-    customer_id: "96453",
-    customer_name: "Ryan Carroll",
-    order_date: "2022-05-14T05:24:00",
-    order_total: "$96.35",
-    current_order_status: "CONFIRMED",
-    shipment_address: "Los Angeles, CA 90017",
-  },
-  {
-    id: "2",
-    product_id: "5434",
-    customer_id: "65345",
-    customer_name: "Mason Nash",
-    order_date: "2022-05-17T07:14:00",
-    order_total: "$836.44",
-    current_order_status: "SHIPPED",
-    shipment_address: "Westminster, CA 92683",
-  },
-  {
-    id: "3",
-    product_id: "9854",
-    customer_id: "87832",
-    customer_name: "Luke Parkin",
-    order_date: "2022-05-16T12:40:00",
-    order_total: "$334.50",
-    current_order_status: "SHIPPED",
-    shipment_address: "San Mateo, CA 94403",
-  },
-  {
-    id: "4",
-    product_id: "8763",
-    customer_id: "09832",
-    customer_name: "Anthony Fry",
-    order_date: "2022-05-14T03:24:00",
-    order_total: "$876.00",
-    current_order_status: "OUT_FOR_DELIVERY",
-    shipment_address: "San Mateo, CA 94403",
-  },
-  {
-    id: "5",
-    product_id: "5627",
-    customer_id: "97632",
-    customer_name: "Ryan Carroll",
-    order_date: "2022-05-14T05:24:00",
-    order_total: "$96.35",
-    current_order_status: "DELIVERED",
-    shipment_address: "Los Angeles, CA 90017",
-  },
-];
+import React, { useCallback, useEffect, useState } from "react";
+import { getReservation } from "../services/reservation.js";
+import { Table, Tag } from "antd";
 
 export default function RecentOrders() {
+  const [loading, setLoading] = useState(false);
+  const [reservations, setReservations] = useState([]);
+
+  const handleGetReservation = useCallback(async () => {
+    try {
+      const result = await getReservation();
+      setReservations(result.data.reservations.slice(0, 5));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => {
+    handleGetReservation();
+  }, [handleGetReservation]);
+
+  const columns = [
+    {
+      title: "Mã bàn",
+      dataIndex: "table",
+      key: "table",
+      align: "center",
+    },
+    {
+      title: "Khách hàng",
+      dataIndex: "name",
+      key: "name",
+      align: "center",
+    },
+    {
+      title: "Liên lạc",
+      dataIndex: "phone",
+      key: "phone",
+      align: "center",
+    },
+    {
+      title: "Số khách",
+      dataIndex: "guests",
+      align: "center",
+      key: "guests",
+    },
+    {
+      title: "Ngày đến",
+      dataIndex: "date",
+      key: "date",
+      align: "center",
+      sorter: (a, b) => {
+        if (typeof a.date === "string" && typeof b.date === "string") {
+          return new Date(a.date) - new Date(b.date);
+        }
+        return a.date.localeCompare(b.date);
+      },
+      render: (date) => {
+        const formattedDate = new Date(date).toLocaleDateString("en-GB");
+        return formattedDate;
+      },
+    },
+    {
+      title: "Giờ đến",
+      dataIndex: "time",
+      key: "time",
+      align: "center",
+      sorter: (a, b) => {
+        const timeA = new Date(`1970-01-01T${a.time}`);
+        const timeB = new Date(`1970-01-01T${b.time}`);
+        return timeA - timeB;
+      },
+    },
+    {
+      title: "Đã đặt cọc",
+      dataIndex: "depositAmount",
+      key: "depositAmount",
+      align: "center",
+      render: (depositAmount) => {
+        if (typeof depositAmount === "number") {
+          return depositAmount.toLocaleString("vi-VN", {
+            style: "currency",
+            currency: "VND",
+          });
+        } else {
+          return "Invalid depositAmount";
+        }
+      },
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      align: "center",
+      render: (status) => {
+        const colorMap = {
+          "Đã đặt trước": "green",
+          "Đang hoạt động": "blue",
+          "Đã hủy": "red",
+        };
+        return <Tag color={colorMap[status]}>{status}</Tag>;
+      },
+    },
+  ];
   return (
     <div className="bg-white px-4 pt-3 pb-4 rounded-sm border border-gray-200 flex-1">
-      <strong className="text-gray-700 font-medium">Recent Orders</strong>
+      <strong className="text-gray-700 font-medium">Đơn đặt bàn mới</strong>
       <div className="mt-3">
-        <table className="w-full text-gray-700">
-          <thead>
-            <tr>
-              <td>ID</td>
-              <td>Product ID</td>
-              <td>Customer Name</td>
-              <td>Order Date</td>
-              <td>Order Total</td>
-              <td>Shipping Address</td>
-              <td>Order Status</td>
-            </tr>
-          </thead>
-          <tbody>
-            {recentOrderData.map((order) => (
-              <tr key={order.id}>
-                <td>
-                  <Link to={`/order/${order.id}`}>#{order.id}</Link>
-                </td>
-                <td>
-                  <Link to={`/product/${order.product_id}`}>
-                    {order.product_id}
-                  </Link>
-                </td>
-                <td>
-                  <Link to={`/customer/${order.customer_id}`}>
-                    {order.customer_name}
-                  </Link>
-                </td>
-                <td>{format(new Date(order.order_date), 'dd MMM yyyy')}</td>
-                <td>{order.order_total}</td>
-                <td>{order.shipment_address}</td>
-                <td>{getOrderStatus (order.current_order_status)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          loading={loading}
+          columns={columns}
+          dataSource={reservations}
+          pagination={false}
+        />
       </div>
     </div>
   );

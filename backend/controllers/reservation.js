@@ -1,6 +1,5 @@
 import schedule from 'node-schedule';
 import moment from 'moment';
-import ErrorHandler from "../middlewares/error.js";
 import { Reservation } from "../models/reservation.js";
 import { TableReservation } from "../models/tableReservation.js"
 import Table from "../models/table.js";
@@ -359,4 +358,22 @@ export const searchOrderByPhone = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+export const getAllReservation = async (req, res) => {
+  try {
+    const reservations = await Reservation.find().sort({ createdAt: "desc" });
+
+    const totalReservation = await Reservation.countDocuments();
+
+    // Tính ngày hiện tại và ngày của 7 ngày trước
+    const sevenDaysAgo = moment().subtract(7, 'days').toDate();
+
+    // Đếm số nhân viên được thêm vào trong 7 ngày gần nhất
+    const recentReservation = await Reservation.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+
+    return res.status(200).json({ reservations, totalReservation, recentReservation });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 

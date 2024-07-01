@@ -11,7 +11,7 @@ export const userSlide = createSlice({
         login: (state, action) => {
             state.user = action.payload.user;
         },
-        logout: (state, action) => {
+        logout: (state) => {
             state.user = {}
             removeUserFromLocalStorage()
             removeTokenFromLocalStorage()

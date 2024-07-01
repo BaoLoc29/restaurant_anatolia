@@ -1,6 +1,6 @@
 import Table from "../models/table.js"
 import joi from "joi"
-
+import moment from 'moment';
 const formatCreatedAt = (date) => {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -210,5 +210,23 @@ export const searchTable = async (req, res) => {
         return res.status(200).json({ tables: formattedTables });
     } catch (error) {
         return res.status(500).json({ message: error.message })
+    }
+}
+export const getTotalTable = async (req, res) => {
+    try {
+        const totalTable = await Table.countDocuments();
+
+        // Tính ngày hiện tại và ngày của 7 ngày trước
+        const sevenDaysAgo = moment().subtract(7, 'days').toDate();
+
+        // Đếm số nhân viên được thêm vào trong 7 ngày gần nhất
+        const recentTable = await Table.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+
+        return res.status(200).json({ totalTable, recentTable })
+
+    } catch (error) {
+        return res.status(500).json({
+            message: error.message
+        })
     }
 }

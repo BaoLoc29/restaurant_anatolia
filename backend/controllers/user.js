@@ -2,7 +2,7 @@ import User from "../models/user.js"
 import bcrypt from "bcryptjs"
 import joi from "joi"
 import jwt from "jsonwebtoken"
-
+import moment from 'moment'
 const tokenSecret = 'secret'
 const formatCreatedAt = (date) => {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -37,7 +37,7 @@ export const login = async (req, res) => {
         const findUser = await User.findOne({ email }).lean()
         if (!findUser) {
             return res.status(401).json({
-                error: "Người dùng đã tồn tại!"
+                error: "Không tìm thấy người dùng!"
             })
         }
 
@@ -394,5 +394,21 @@ export const getUserById = async (req, res) => {
         return res.status(200).json({ user })
     } catch (error) {
         return res.status(500).json({ error });
+    }
+}
+export const getTotalUser = async (req, res) => {
+    try {
+        const totalUser = await User.countDocuments({ role: "Nhân viên" });
+
+        // Tính ngày hiện tại và ngày của 7 ngày trước
+        const sevenDaysAgo = moment().subtract(7, 'days').toDate();
+
+        // Đếm số nhân viên được thêm vào trong 7 ngày gần nhất
+        const recentUsers = await User.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+
+        return res.status(200).json({ totalUser, recentUsers });
+
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
     }
 }

@@ -18,11 +18,15 @@ const getTableById = (tableId) => {
 const searchTable = (keyword, option) => {
     return axiosInstanceAuth.post('/table/search-table', { keyword, option });
 }
+const getTotalTable = () => {
+    return axiosInstanceAuth.get("/table/get-total-table/")
+}
 export {
     createTable,
     editTable,
     deleteTable,
     getPagingTable,
     getTableById,
-    searchTable
+    searchTable,
+    getTotalTable
 }
