@@ -184,23 +184,38 @@ export const deleteMenu = async (req, res) => {
 }
 export const getPagingMenu = async (req, res) => {
     try {
-        const query = req.query
-        const menus = await Menu.find()
-            .skip(query.pageSize * query.pageIndex - query.pageSize)
-            .limit(query.pageSize).sort({ createdAt: "desc" })
+        const query = req.query;
+        let menuQuery = Menu.find();
 
-        const countMenus = await Menu.countDocuments()
-        const totalPage = Math.ceil(countMenus / query.pageSize)
+        // Filter theo category nếu có
+        if (query.category !== undefined && query.category !== null) {
+            menuQuery = menuQuery.where('category').equals(query.category);
+        }
+
+        const menus = await menuQuery
+            .skip(query.pageSize * query.pageIndex - query.pageSize)
+            .limit(query.pageSize)
+            .sort({ createdAt: "desc" });
+
+        let countMenus, totalPages;
+
+        if (query.category !== undefined && query.category !== null) {
+            countMenus = await menuQuery.clone().countDocuments();
+        } else {
+            countMenus = await Menu.countDocuments();
+        }
+
+        totalPages = Math.ceil(countMenus / query.pageSize);
 
         const formattedMenus = menus.map(menu => ({
             ...menu.toObject(),
             createdAt: formatCreatedAt(menu.createdAt)
         }));
 
-        return res.status(200).json({ menus: formattedMenus, totalPage, count: countMenus })
+        return res.status(200).json({ menus: formattedMenus, totalPages, count: countMenus });
 
     } catch (error) {
-        return res.status(500).json({ message: error.message })
+        return res.status(500).json({ message: error.message });
     }
 }
 export const getMenuById = async (req, res) => {
@@ -260,8 +275,9 @@ export const getAllMenu = async (req, res) => {
         // Đếm số nhân viên được thêm vào trong 7 ngày gần nhất
         const recentMenu = await Menu.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
 
+        const categories = await Menu.distinct('category');
 
-        return res.status(200).json({ menus, totalMenu, recentMenu });
+        return res.status(200).json({ menus, categories, totalMenu, recentMenu });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

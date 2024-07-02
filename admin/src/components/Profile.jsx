@@ -86,7 +86,7 @@ const Profile = () => {
     }
   };
   return (
-    <div className="h-screen">
+    <div>
       <div className="flex flex-row gap-5 w-full">
         <div className="w-[18rem] h-[22rem] rounded-sm flex flex-col">
           <div className="flex gap-3 items-center">

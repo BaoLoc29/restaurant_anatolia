@@ -287,7 +287,7 @@ const TableComponent = () => {
         pagination={false}
       />
       <Pagination
-        className="my-5 float-right"
+        className="mt-5 pb-5 float-right"
         defaultCurrent={1}
         current={searchQuery.trim() === "" ? pageIndex : searchPageIndex}
         total={searchQuery.trim() === "" ? totalDoc : searchTotalDoc}

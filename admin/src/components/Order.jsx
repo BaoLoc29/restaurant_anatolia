@@ -180,7 +180,6 @@ const Orders = () => {
           setShowResult(false);
         }, 90000);
         setErrorMessage("");
-        console.log(result.data?.success);
       } else {
         const errorMessage =
           result.data.message || "Đặt bàn thất bại! Vui lòng kiểm tra lại!";
@@ -255,14 +254,14 @@ const Orders = () => {
   };
 
   return (
-    <div className="h-full">
+    <div className="h-[54rem]">
       <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách đơn đặt bàn</h1>
         <Input
           ref={inputRef}
           placeholder="Nhập số điện thoại khách hàng...."
           maxLength={10}
-          className="text-sm w-[25rem]"
+          className="text-[1rem] w-[25rem]"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onPressEnter={handleSearch}

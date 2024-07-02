@@ -133,6 +133,9 @@ export const send_reservation = async (req, res, next) => {
       tableId: availableTable.id_table,
       reservationDate: reservationDateTime,
       reservationTime: time,
+      statusReservation: savedReservation.status,
+      deposit: savedReservation.deposit,
+      depositAmount: savedReservation.depositAmount
     });
     await newTableReservation.save();
 

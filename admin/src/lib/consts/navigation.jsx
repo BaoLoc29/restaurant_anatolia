@@ -39,7 +39,7 @@ export const DASHBOARD_SIDEBAR_LINKS = [
   {
     key: "foods",
     label: "Quản lý đặt món",
-    path: "/foods",
+    path: "/item-order-dish",
     icon: <IoFastFood />,
   },
 ];
