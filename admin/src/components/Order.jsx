@@ -178,7 +178,7 @@ const Orders = () => {
         form.resetFields();
         setTimeout(() => {
           setShowResult(false);
-        }, 90000);
+        }, 30000);
         setErrorMessage("");
       } else {
         const errorMessage =
@@ -258,23 +258,25 @@ const Orders = () => {
       <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách đơn đặt bàn</h1>
         <Input
+          size="large"
           ref={inputRef}
           placeholder="Nhập số điện thoại khách hàng...."
           maxLength={10}
-          className="text-[1rem] w-[25rem]"
+          className=" w-[30rem]"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onPressEnter={handleSearch}
         />
         <Button
           type="primary"
+          size="large"
           onClick={() => setDrawerCreateOrder(true)}
           icon={<PlusOutlined />}
         >
           Tạo đơn mới
         </Button>
       </div>
-      <div className="px-3 bg-white">
+      <div className="px-3 bg-white relative">
         <Alert
           message={`Bạn đã chọn ngày ${selectedValue?.format("DD-MM-YYYY")}`}
           className="absolute my-3"

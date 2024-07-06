@@ -1,7 +1,6 @@
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
 import { Reservation } from '../models/reservation.js';
-import { FailedTransaction } from '../models/failedTransaction.js';
 
 dotenv.config();
 
@@ -17,6 +16,25 @@ const createCheckoutSession = async (req, res) => {
 
     try {
         if (deposit) {
+            // Tạo một đặt bàn mới với trạng thái "đang chờ thanh toán"
+            const newReservation = new Reservation({
+                name,
+                email,
+                phone,
+                date,
+                time,
+                guests,
+                notes,
+                table: "MãBànNàoĐó",
+                status: "Đang chờ thanh toán",
+                deposit: true,
+                depositAmount: 200000,
+            });
+
+            // Lưu đặt bàn vào cơ sở dữ liệu
+            const savedReservation = await newReservation.save();
+            const reservationId = savedReservation._id.toString();
+
             const line_items = [{
                 price_data: {
                     currency: 'vnd',
@@ -32,9 +50,10 @@ const createCheckoutSession = async (req, res) => {
                 payment_method_types: ['card'],
                 line_items,
                 mode: 'payment',
-                success_url,
-                cancel_url,
+                success_url: `${success_url}?reservationId=${reservationId}`,
+                cancel_url: `${cancel_url}?reservationId=${reservationId}`,
                 metadata: {
+                    reservationId,
                     name,
                     email,
                     phone,
@@ -46,7 +65,7 @@ const createCheckoutSession = async (req, res) => {
                 },
             });
 
-            console.log("Phiên Stripe được tạo:", session.url);
+            console.log("Đã tạo phiên Stripe:", session.url);
             res.json({ success: true, session_url: session.url });
         } else {
             const newReservation = new Reservation({
@@ -57,19 +76,19 @@ const createCheckoutSession = async (req, res) => {
                 time,
                 guests,
                 notes,
-                table,
-                status: "Đã đặt trước",
+                table: "MãBànNàoĐó",
+                status: "Đang hoạt động",
                 deposit: false,
                 depositAmount: 0,
             });
             await newReservation.save();
-            console.log("Lưu đặt chỗ thành công!");
+            console.log("Đặt chỗ đã được lưu thành công.");
 
-            res.json({ success: true, message: 'Đặt chỗ thành công!' });
+            res.json({ success: true, message: 'Đã tạo đặt bàn thành công' });
         }
     } catch (error) {
         console.error("Lỗi trong quá trình tạo phiên thanh toán:", error);
-        res.status(500).json({ success: false, message: 'Lỗi tạo đặt chỗ hoặc phiên thanh toán' });
+        res.status(500).json({ success: false, message: 'Lỗi trong quá trình tạo đặt bàn hoặc phiên thanh toán' });
     }
 };
 
@@ -79,91 +98,60 @@ const handleStripeWebhook = async (req, res) => {
     let event;
     try {
         event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-        console.log("Xác minh sự kiện:", event);
+        console.log("Sự kiện được xác minh:", event);
     } catch (err) {
-        console.log(`⚠️  Xác minh chữ ký webhook thất bại.`, err.message);
+        console.error(`Xác minh chữ ký webhook thất bại:`, err.message);
         return res.sendStatus(400);
     }
+
+    console.log("Sự kiện nhận được:", JSON.stringify(event, null, 2));
 
     switch (event.type) {
         case 'checkout.session.completed':
             await handlePaymentSuccess(event.data.object);
             break;
         case 'payment_intent.payment_failed':
+        case 'charge.failed':
             await handlePaymentFailed(event.data.object);
             break;
         default:
-            console.log(`Loại sự kiện không xử lý: ${event.type}`);
+            console.log(`Loại sự kiện không xử lý ${event.type}`);
     }
 
     res.status(200).end();
 };
 
 const handlePaymentSuccess = async (session) => {
-    const { name, email, phone, date, time, guests, notes } = session.metadata;
+    const reservationId = session.metadata.reservationId;
 
     try {
-        const newReservation = new Reservation({
-            name,
-            email,
-            phone,
-            date,
-            time,
-            guests,
-            notes,
-            table,
-            status: "Đã đặt trước",
-            deposit: true,
-            depositAmount: 200000,
-        });
-        await newReservation.save();
-        console.log("Lưu đặt chỗ thành công sau khi thanh toán.");
+        const reservation = await Reservation.findById(reservationId);
+        if (reservation) {
+            reservation.status = "Thanh toán thành công";
+            await reservation.save();
+            console.log("Đặt chỗ đã được cập nhật thành công sau khi thanh toán.");
+        } else {
+            console.error("Không tìm thấy đơn đặt bàn:", reservationId);
+        }
     } catch (error) {
-        console.error("Lỗi lưu đặt chỗ sau khi thanh toán:", error);
+        console.error("Lỗi khi cập nhật đặt bàn sau khi thanh toán:", error);
     }
 };
 
-const handlePaymentFailed = async (session) => {
-    console.log("Phiên thanh toán thất bại:", JSON.stringify(session, null, 2));
-
-    const { metadata, last_payment_error } = session;
-    const payment_method = last_payment_error ? last_payment_error.payment_method : null;
-
-    if (!payment_method) {
-        console.error("Không thể lấy thông tin phương thức thanh toán.");
-        return;
-    }
-
-    const { billing_details } = payment_method;
-    const email = billing_details.email || "Null";
-    const name = billing_details.name || "Null";
-    const phone = metadata.phone || "Null";
-    const date = metadata.date || "Null";
-    const time = metadata.time || "Null";
-    const guests = metadata.guests || 0;
-    const notes = metadata.notes || "";
+const handlePaymentFailed = async (paymentIntent) => {
+    const reservationId = paymentIntent.metadata.reservationId;
 
     try {
-        const failedTransaction = new FailedTransaction({
-            name,
-            email,
-            phone,
-            date,
-            time,
-            guests,
-            notes,
-            deposit: false, // Đặt cọc không thành công nên đánh dấu là false
-            depositAmount: 0, // Không có số tiền cọc đã đặt
-            status: "Thanh toán thất bại",
-            createdAt: new Date(),
-            payment_failure_code: last_payment_error ? last_payment_error.code : "Không xác định",
-            payment_failure_message: last_payment_error ? last_payment_error.message : "Không xác định",
-        });
-
-        await failedTransaction.save();
-        console.log("Lưu trữ giao dịch thất bại thành công.");
+        const reservation = await Reservation.findById(reservationId);
+        if (reservation) {
+            reservation.status = "Thanh toán thất bại";
+            await reservation.save();
+            console.log("Đặt chỗ đã được cập nhật với trạng thái thanh toán thất bại.");
+        } else {
+            console.error("Không tìm thấy đặt bàn:", reservationId);
+        }
     } catch (error) {
-        console.error("Lỗi khi lưu đặt chỗ sau khi thanh toán thất bại:", error.message);
+        console.error("Lỗi khi cập nhật đặt bàn sau khi thanh toán thất bại:", error.message);
     }
 };
 

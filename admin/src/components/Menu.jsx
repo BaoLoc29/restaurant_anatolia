@@ -10,6 +10,7 @@ import {
   Input,
   Tag,
 } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { TiDelete } from "react-icons/ti";
@@ -291,12 +292,14 @@ const MenuComponent = () => {
         <h1 className="text-gray-500 text-xl">Danh sách món ăn</h1>
         <Space.Compact className="w-[32rem] relative">
           <Select
+            size="large"
             defaultValue="code"
             options={options}
             className="w-[10rem]"
             onChange={(value) => setSelectedOption(value)}
           />
           <Input
+            size="large"
             placeholder="Nhập từ khóa tìm kiếm ...."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -309,7 +312,12 @@ const MenuComponent = () => {
             />
           )}
         </Space.Compact>
-        <Button type="primary" onClick={() => setModalCreateMenu(true)}>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={() => setModalCreateMenu(true)}
+        >
           Thêm món mới
         </Button>
       </div>

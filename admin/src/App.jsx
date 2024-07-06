@@ -14,8 +14,7 @@ import Employee from "./components/Employee.jsx";
 import Table from "./components/Table.jsx";
 import Menu from "./components/Menu.jsx";
 import SessionExpiredPopup from "../src/components/SessionExpiredPopup/index.jsx";
-import ListOrderDish from "./components/ListOrderDish.jsx";
-import ItemOrderDish from "./components/ItemOrderDish/index.jsx";
+import OrderDish from "./components/OrderDish.jsx";
 
 const App = () => {
   const user = useSelector((state) => state.users.user);
@@ -55,12 +54,11 @@ const App = () => {
             <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
               <Route path="orders" element={<Order />} />
-              <Route path="list-order-dish" element={<ListOrderDish />} />
+              <Route path="order-dish" element={<OrderDish />} />
               <Route path="employees" element={<Employee />} />
               <Route path="tables" element={<Table />} />
               <Route path="menus" element={<Menu />} />
               <Route path="my-profile" element={<Profile />} />
-              <Route path="item-order-dish" element={<ItemOrderDish />} />
             </Route>
           </Route>
         )}

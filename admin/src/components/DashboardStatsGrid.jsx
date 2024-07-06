@@ -87,9 +87,6 @@ function DashboardStatsGrid() {
             <strong className="text-xl text-gray-700 font-semibold">
               {loading ? 0 : tables.total}
             </strong>
-            <span className="text-sm text-green-500 pl-2">
-              +{loading ? 0 : tables.recent}
-            </span>
           </div>
         </div>
       </BoxWrapper>
@@ -105,9 +102,6 @@ function DashboardStatsGrid() {
             <strong className="text-xl text-gray-700 font-semibold">
               {loading ? 0 : users.total}
             </strong>
-            <span className="text-sm text-green-500 pl-2">
-              + {loading ? 0 : users.recent}
-            </span>
           </div>
         </div>
       </BoxWrapper>
@@ -121,9 +115,6 @@ function DashboardStatsGrid() {
             <strong className="text-xl text-gray-700 font-semibold">
               {loading ? 0 : menus.total}
             </strong>
-            <span className="text-sm text-green-500 pl-2">
-              +{loading ? 0 : menus.recent}
-            </span>
           </div>
         </div>
       </BoxWrapper>
@@ -140,9 +131,6 @@ function DashboardStatsGrid() {
             <strong className="text-xl text-gray-700 font-semibold">
               {loading ? 0 : reservations.total}
             </strong>
-            <span className="text-sm text-green-500 pl-2">
-              + {loading ? 0 : reservations.recent}
-            </span>
           </div>
         </div>
       </BoxWrapper>

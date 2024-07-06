@@ -34,6 +34,7 @@ const reservationSchema = new mongoose.Schema({
     type: Number,
     required: [true, "Số lượng khách là bắt buộc."],
     min: [1, "Phải có ít nhất 1 khách."],
+    max: [12, "Số lượng khách không được quá 12 người."]
   },
   notes: {
     type: String,

@@ -22,6 +22,7 @@ import {
   getPagingTable,
   searchTable,
 } from "../services/table.js";
+import { PlusOutlined } from "@ant-design/icons";
 
 const TableComponent = () => {
   const [tables, setTables] = useState([]);
@@ -258,12 +259,14 @@ const TableComponent = () => {
         <h1 className="text-gray-500 text-xl">Danh sách bàn</h1>
         <Space.Compact className="w-[32rem] relative">
           <Select
+            size="large"
             defaultValue="id_table"
             options={options}
             className="w-[10rem]"
             onChange={(value) => setSelectedOption(value)}
           />
           <Input
+            size="large"
             placeholder="Nhập từ khóa tìm kiếm ...."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -276,7 +279,12 @@ const TableComponent = () => {
             />
           )}
         </Space.Compact>
-        <Button type="primary" onClick={() => setModalCreateTable(true)}>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={() => setModalCreateTable(true)}
+        >
           Thêm bàn mới
         </Button>
       </div>

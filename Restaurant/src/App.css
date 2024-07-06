@@ -338,7 +338,7 @@ nav svg {
   max-width: 1500px;
   min-width: 1500px;
   display: flex;
-  padding: 0 100px;
+  padding: 10px 50px;
 }
 .about .container .banner {
   flex: 1;
@@ -396,9 +396,9 @@ nav svg {
   color: #111;
 }
 @media (max-width: 1520px) {
-  .about {
+  /* .about {
     padding: 30px 20px;
-  }
+  } */
   .about .container {
     min-width: fit-content;
   }

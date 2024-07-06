@@ -56,12 +56,6 @@ const Confirm = () => {
           }
         );
         console.log("Stripe session URL:", data.session_url);
-        // Lưu session_url vào state để sử dụng khi cần thiết (nếu cần)
-        setState((prevState) => ({
-          ...prevState,
-          stripeSessionUrl: data.session_url,
-        }));
-        // Chuyển hướng người dùng đến trang thanh toán của Stripe
         window.location.href = data.session_url;
       } catch (error) {
         console.error("Error:", error);
@@ -75,7 +69,6 @@ const Confirm = () => {
     } else {
       try {
         setState((prevState) => ({ ...prevState, loading: true }));
-        // Gọi API để lưu dữ liệu đặt chỗ vào cơ sở dữ liệu
         const { data } = await axios.post(
           "http://localhost:4000/reservation/send",
           updatedReservationData,
@@ -86,19 +79,10 @@ const Confirm = () => {
             withCredentials: true,
           }
         );
-        if (data.success) {
-          // Sau khi lưu thành công, chuyển hướng đến trang success
-          navigate("/success");
-        } else {
-          const errorMessage =
-            data.message || "Có lỗi xảy ra. Vui lòng thử lại sau.";
-          setState((prevState) => ({ ...prevState, errorMessage }));
-          console.log(
-            "Server returned success: false with message:",
-            data.message
-          );
-        }
+        console.log("Reservation saved:", data);
+        navigate("/success");
       } catch (error) {
+        console.error("Error:", error);
         const errorMessage =
           error.response?.data?.message ||
           "Có lỗi xảy ra. Vui lòng thử lại sau.";

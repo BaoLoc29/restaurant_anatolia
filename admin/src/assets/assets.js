@@ -4,5 +4,5 @@ import logo_mini from './logo_mini.png'
 export const assets = {
     logo_image,
     illustration,
-    logo_mini
+    logo_mini,
 }

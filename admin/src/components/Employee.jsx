@@ -21,6 +21,7 @@ import {
   editUser,
   searchUser,
 } from "../services/user.js";
+import { PlusOutlined } from "@ant-design/icons";
 
 const Employee = () => {
   const [users, setUsers] = useState([]);
@@ -59,6 +60,7 @@ const Employee = () => {
       title: "Mã nhân viên",
       dataIndex: "e_code",
       key: "e_code",
+      align: "center",
       sorter: (a, b) => {
         if (typeof a.e_code === "number" && typeof b.e_code === "number") {
           return a.e_code - b.e_code;
@@ -70,16 +72,19 @@ const Employee = () => {
       title: "Tên nhân viên",
       dataIndex: "name",
       key: "name",
+      align: "center",
     },
     {
       title: "E-mail",
       dataIndex: "email",
       key: "email",
+      align: "center",
     },
     {
       title: "Giới tính",
       dataIndex: "gender",
       key: "gender",
+      align: "center",
       render: (gender) => {
         return gender ? "Nam" : "Nữ";
       },
@@ -88,18 +93,21 @@ const Employee = () => {
       title: "Số điện thoại",
       dataIndex: "phone",
       key: "phone",
+      align: "center",
     },
     {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
+      align: "center",
     },
     {
       title: "Hành động",
       key: "action",
+      align: "center",
       render: (row) => {
         return (
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             <FaEdit
               className="text-blue-500 text-2xl hover:text-blue-700 cursor-pointer"
               onClick={() => handleOpenEditModal(row._id)}
@@ -237,12 +245,14 @@ const Employee = () => {
         <h1 className="text-gray-500 text-xl">Danh sách nhân viên</h1>
         <Space.Compact className="w-[32rem] relative">
           <Select
+            size="large"
             defaultValue="e_code"
             options={options}
             className="w-[10rem]"
             onChange={(value) => setSelectedOption(value)}
           />
           <Input
+            size="large"
             placeholder="Nhập từ khóa tìm kiếm ...."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -255,7 +265,12 @@ const Employee = () => {
             />
           )}
         </Space.Compact>
-        <Button type="primary" onClick={() => setModalCreateUser(true)}>
+        <Button
+          type="primary"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={() => setModalCreateUser(true)}
+        >
           Thêm nhân viên
         </Button>
       </div>

@@ -73,6 +73,9 @@ const Reservation = () => {
       newErrors.guests = "Vui lòng nhập số lượng khách!";
     } else if (isNaN(guests) || guests < 1) {
       newErrors.guests = "Số lượng khách không hợp lệ!";
+    } else if (guests > 12) {
+      newErrors.guests =
+        "Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để đặt bàn!";
     }
 
     setErrors(newErrors);
@@ -190,6 +193,9 @@ const Reservation = () => {
           newErrors.guests = "Vui lòng nhập số lượng khách!";
         } else if (isNaN(value) || value < 1) {
           newErrors.guests = "Số lượng khách không hợp lệ!";
+        } else if (value > 12) {
+          newErrors.guests =
+            "Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để đặt bàn!";
         } else {
           delete newErrors.guests;
         }
@@ -211,7 +217,8 @@ const Reservation = () => {
           <div className="reservation_form_box">
             <h1>ĐẶT BÀN NGAY</h1>
             <p>
-              Liên hệ nhà hàng thông qua hotline <b>0922982210</b>
+              Liên hệ nhà hàng thông qua hotline <b>0922982210</b> <br /> Open
+              Time: 08:00 AM - 11:00 PM
             </p>
             <form onSubmit={handleReservation}>
               <div>

@@ -97,10 +97,7 @@ const DrawerCreateOrder = ({
         name="createOrderForm"
         onFinish={handleSubmit}
         initialValues={{
-          name: "AFHWA",
           email: "user@gmail.com",
-          phone: "0649497778",
-          guests: "413",
           deposit: false,
           status: "Đang hoạt động",
         }}
@@ -220,20 +217,6 @@ const DrawerCreateOrder = ({
             </Form.Item>
           </Col>
           <Col span={12}>
-            {/* <div className="flex justify-between">
-              <img
-                src="https://becexamguide.com/wp-content/uploads/2020/10/logo-stripe.png"
-                alt="Stripe"
-                width={240}
-                className="-mx-4 my-0 absolute"
-              />
-              <img
-                src="https://landing.nvncdn.com/business/3705/tai_lieu_gioi_thieu_payment_website_pdf_(ban_thuyet_trinh)_(3)_20211203150731.png"
-                alt="momo"
-                width={170}
-                className="ml-[12rem] mt-0"
-              />
-            </div> */}
             <Form.Item
               name="status"
               label={<span className="font-bold">Trạng thái</span>}
@@ -245,10 +228,10 @@ const DrawerCreateOrder = ({
               ]}
             >
               <Select placeholder="--Chọn trạng thái--" className="text-base">
-                <Select.Option value="Đã đặt trước">Đã đặt trước</Select.Option>
                 <Select.Option value="Đang hoạt động">
                   Đang hoạt động
                 </Select.Option>
+                <Select.Option value="Đã đặt trước">Đã đặt trước</Select.Option>
               </Select>
             </Form.Item>
           </Col>

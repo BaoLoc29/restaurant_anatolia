@@ -18,8 +18,9 @@ function Sidebar() {
   const [open, setOpen] = useState(pathname === "/");
 
   useEffect(() => {
-    setOpen(pathname === "/");
+    setOpen(!(pathname === "/order-dish"));
   }, [pathname]);
+
   return (
     <div
       className={`flex flex-col bg-neutral-900 ${open ? "w-60" : "w-20"} duration-300 p-3 text-white relative`}

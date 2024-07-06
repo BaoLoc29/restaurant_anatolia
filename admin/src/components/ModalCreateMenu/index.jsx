@@ -12,7 +12,7 @@ const ModalCreateMenu = ({
   handleOk,
   selectedMenu,
 }) => {
-  const [loadingData, setLoadingData] = useState();
+  const [loadingData, setLoadingData] = useState(false);
   const getMenu = useCallback(async () => {
     try {
       setLoadingData(true);
@@ -138,7 +138,7 @@ const ModalCreateMenu = ({
               >
                 Danh mục: <span className="text-red-500">*</span>
               </label>
-              
+
               <Form.Item
                 name="category"
                 style={{ marginBottom: 10 }}
