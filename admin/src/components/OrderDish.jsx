@@ -3,22 +3,21 @@ import {
   Card,
   Spin,
   Button,
-  Tooltip,
   AutoComplete,
   Form,
   Table,
+  Alert,
+  Empty,
 } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
-import { HiOutlineSearch } from "react-icons/hi";
 import { getPagingMenu, getAllMenu } from "../services/menu.js";
 import { IoIosPrint } from "react-icons/io";
 import { MdDelete, MdLocalPrintshop } from "react-icons/md";
 import { TbBrandAirtable } from "react-icons/tb";
-import { UserAddOutlined } from "@ant-design/icons";
 import ModalGetReservation from "../components/ModalGetReservation/index.jsx";
 import QuantityInput from "./QuantityInput/index.jsx";
+import { searchMenu } from "../services/menu.js";
 
-const { Option } = AutoComplete;
 const OrderDish = () => {
   const [form] = Form.useForm();
   const [menus, setMenus] = useState([]);
@@ -33,38 +32,8 @@ const OrderDish = () => {
   const [options, setOptions] = useState([]);
   const [selectedTable, setSelectedTable] = useState(null);
   const [totalQuantity, setTotalQuantity] = useState(0);
-  const [dataSource, setDataSource] = useState([
-    {
-      key: "1",
-      dishName: "Món 1",
-      price: 100000,
-      quantity: 1,
-    },
-    {
-      key: "2",
-      dishName: "Món 2",
-      price: 200000,
-      quantity: 1,
-    },
-    {
-      key: "3",
-      dishName: "Món 3",
-      price: 200000,
-      quantity: 1,
-    },
-    {
-      key: "4",
-      dishName: "Món 4",
-      price: 200000,
-      quantity: 1,
-    },
-    {
-      key: "5",
-      dishName: "Món 5",
-      price: 200000,
-      quantity: 1,
-    },
-  ]);
+  const [dataSource, setDataSource] = useState([]);
+  const { Option } = AutoComplete;
 
   const getMenus = useCallback(async () => {
     try {
@@ -130,20 +99,13 @@ const OrderDish = () => {
     return name;
   };
 
-  const handleSearch = (value) => {
-    // Fetch data from API or any data source
-    // This is a mock example with static data
-    const data = [
-      { value: "Option 1" },
-      { value: "Option 2" },
-      { value: "Option 3" },
-    ];
-
-    const filteredData = data.filter((item) =>
-      item.value.toLowerCase().includes(value.toLowerCase())
-    );
-
-    setOptions(filteredData);
+  const handleSearch = async (keyword) => {
+    try {
+      const result = await searchMenu(keyword, "name");
+      setOptions(result.data.menus);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleCloseModal = () => {
@@ -171,17 +133,38 @@ const OrderDish = () => {
     setDataSource(newData);
   };
 
+  const addDishToOrder = (code, dishName, price) => {
+    const existingDishIndex = dataSource.findIndex(
+      (dish) => dish.code === code
+    );
+
+    if (existingDishIndex !== -1) {
+      const newData = [...dataSource];
+      newData[existingDishIndex].quantity += 1;
+      setDataSource(newData);
+    } else {
+      const newDish = {
+        key: dataSource.length + 1,
+        code,
+        dishName,
+        price,
+        quantity: 1, // Default quantity
+      };
+      setDataSource([...dataSource, newDish]);
+    }
+  };
+
+  const handleDeleteDish = (key) => {
+    const newData = dataSource.filter((item) => item.key !== key);
+    setDataSource(newData);
+  };
+
   const columns = [
     {
-      title: "Số",
-      key: "index",
-      align: "center",
-      render: (text, record, index) => index + 1,
-    },
-    {
-      title: "Món",
+      title: "Tên món",
       dataIndex: "dishName",
       key: "dishName",
+      align: "center",
       render: (text, record) => (
         <div>
           <div className="font-bold">{record.dishName}</div>
@@ -195,6 +178,7 @@ const OrderDish = () => {
       title: "Số lượng",
       dataIndex: "quantity",
       key: "quantity",
+      align: "center",
       render: (text, record) => (
         <QuantityInput
           value={record.quantity}
@@ -220,7 +204,10 @@ const OrderDish = () => {
       render: (row) => {
         return (
           <div className="flex gap-2 justify-center">
-            <MdDelete className="text-red-500 text-2xl hover:text-red-700 cursor-pointer" />
+            <MdDelete
+              className="text-red-500 text-2xl hover:text-red-700 cursor-pointer"
+              onClick={() => handleDeleteDish(row.key)}
+            />
           </div>
         );
       },
@@ -231,23 +218,41 @@ const OrderDish = () => {
     <div className="flex justify-between h-[37rem]">
       {/* Tìm món */}
       <div className="bg-white p-4 w-[15rem]">
-        <div className="relative">
-          <HiOutlineSearch
-            fontSize={20}
-            className="text-gray-400 absolute top-1/2 left-3 -translate-y-1/2"
-          />
-          <input
-            type="text"
-            placeholder="Tìm món ..."
-            className="text-sm focus:outline-none active:outline-none border border-gray-300 w-[13rem] h-10 pl-10 pr-4 rounded-sm"
-          />
-        </div>
+        <AutoComplete
+          size="large"
+          onSearch={handleSearch}
+          placeholder="Tìm kiếm món ăn"
+          className="w-[13rem]"
+          allowClear
+        >
+          {options.map((option) => (
+            <Option key={option._id} value={option.name}>
+              <div
+                className="flex items-center"
+                onClick={() =>
+                  addDishToOrder(option.code, option.name, option.price)
+                }
+              >
+                <img
+                  src={option.imageMenu}
+                  alt={option.name}
+                  className="w-12 h-12 mr-2"
+                />
+                <div>
+                  <h1 className="font-bold">{option.name}</h1>
+                  <div>{option.price.toLocaleString()} đ</div>
+                </div>
+              </div>
+            </Option>
+          ))}
+        </AutoComplete>
+
         <ul className="mt-3">
           <li
             className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
               activeCategory === null
                 ? "bg-gray-300 border-gray-700"
-                : "hover:bg-gray-300 hover:border-gray-700"
+                : "hover:bg-gray-300 "
             }`}
             onClick={() => handleCategoryClick(null)}
           >
@@ -256,7 +261,7 @@ const OrderDish = () => {
           {categories.map((category) => (
             <li
               key={category}
-              className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded hover:border-gray-700 inline-block transition duration-300 cursor-pointer flex items-center ${
+              className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
                 activeCategory === category
                   ? "bg-gray-300 hover:bg-gray-400"
                   : "hover:bg-gray-300"
@@ -287,28 +292,27 @@ const OrderDish = () => {
                 bodyStyle={{ padding: 7 }}
                 cover={
                   <img
-                    alt="example"
-                    src="https://transcode-v2.app.engoo.com/image/fetch/f_auto,c_lfill,w_300,dpr_3/https://assets.app.engoo.com/images/x7jPxj9YtJfv97hnC3mMmQog5VwuYojZ7tlrhczGXIV.jpeg"
-                    className="h-[10rem] "
+                    className="h-[10rem]"
+                    src={menu.imageMenu}
+                    alt="menu_image"
+                    style={{
+                      objectFit: "cover",
+                    }}
                   />
                 }
+                onClick={() => addDishToOrder(menu.code, menu.name, menu.price)}
               >
                 <h1 className="m-2 font-bold text-base text-center">
                   {truncatedName(menu.name, 20)}
                 </h1>
                 <p className="m-2 text-base text-center">
-                  {menu.price
-                    ? menu.price.toLocaleString("vi-VN", {
-                        style: "currency",
-                        currency: "VND",
-                      })
-                    : "N/A"}
+                  {menu.price.toLocaleString()} đ
                 </p>
               </Card>
             ))
           ) : (
             <div className="flex items-center justify-center w-full h-[33rem] bg-gray-200">
-              <img src="/notFound.svg" alt="No menu available" />
+              <Empty />
             </div>
           )}
         </div>
@@ -326,43 +330,28 @@ const OrderDish = () => {
       </div>
       {/* Đặt món */}
       <div className="w-[32rem] h-[37rem] bg-white p-4">
-        {/* Tìm đơn đặt bàn */}
-        <div className="flex gap-2 mb-2 justify-between w-full">
-          <Tooltip placement="top" title="Chọn bàn">
-            <Button
-              className="h-9 text-lg flex items-center"
-              icon={<TbBrandAirtable />}
-              onClick={() => {
-                setModalGetReservation(true);
-                setSelectedTable(null);
-              }}
-            >
-              {selectedTable ? `Bàn ${selectedTable}` : "Tại bàn ..."}
-            </Button>
-          </Tooltip>
-
-          <AutoComplete
-            style={{ width: 290 }}
-            onSearch={handleSearch}
-            placeholder="Tìm kiếm"
-            className="h-9 w-full"
-          >
-            {options.map((option) => (
-              <Option
-                className="text-lg"
-                key={option.value}
-                value={option.value}
-              >
-                {option.value}
-              </Option>
-            ))}
-          </AutoComplete>
+        <div className="flex mb-2 justify-between w-full">
+          <Alert
+            message={
+              <span>
+                Bạn đã chọn bàn có mã là{" "}
+                <span className="text-red-500 font-bold">
+                  {selectedTable ? `${selectedTable}` : "----"}
+                </span>
+              </span>
+            }
+          />
 
           <Button
-            className="h-9"
-            style={{ width: 40 }}
-            icon={<UserAddOutlined />}
-          />
+            className="h-9 text-lg flex items-center"
+            icon={<TbBrandAirtable />}
+            onClick={() => {
+              setModalGetReservation(true);
+              setSelectedTable(null);
+            }}
+          >
+            Chọn bàn
+          </Button>
 
           <ModalGetReservation
             title="Chọn bàn đã được đặt trước"
@@ -395,8 +384,8 @@ const OrderDish = () => {
             </div>
 
             <div className="flex justify-between mt-3">
-              <h1>Thuế hóa đơn</h1>
-              <p className="font-bold">0</p>
+              <h1>Đã đặt cọc</h1>
+              <p className="font-bold">0 đ</p>
             </div>
           </div>
 

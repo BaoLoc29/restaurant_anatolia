@@ -38,7 +38,7 @@ const Orders = () => {
   const [searchResults, setSearchResults] = useState([]);
 
   /* eslint-disable no-unused-vars */
-  const [pageSize, setPageSize] = useState(7);
+  const [pageSize, setPageSize] = useState(6);
   const [pageIndex, setPageIndex] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalDoc, setTotalDoc] = useState(0);

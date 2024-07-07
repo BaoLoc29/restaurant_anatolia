@@ -16,7 +16,8 @@ const Table = new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        default: "Còn trống"    
+        default: "Còn trống",
+        enum: ['Còn trống', 'Đã đặt cọc', 'Chưa đặt cọc', 'Đang sử dụng'],
     },
 }, { timestamps: true })
 export default mongoose.model("tables", Table)

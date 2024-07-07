@@ -36,11 +36,6 @@ const TableReservationSchema = new mongoose.Schema({
         },
         min: [0, "Số tiền đặt cọc không thể nhỏ hơn 0."]
     },
-    status: {
-        type: String,
-        required: true,
-        default: "Chưa thanh toán"
-    },
     dishes: [{
         dishName: {
             type: String,

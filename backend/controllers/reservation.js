@@ -127,6 +127,13 @@ export const send_reservation = async (req, res, next) => {
           await tableToUpdate.save();
         }
         console.log(`Đơn đặt chỗ ${savedReservation._id} đã bị hủy tự động.`);
+        // Cập nhật trạng thái trong bảng phụ (TableReservation)
+        const tableReservation = await TableReservation.findOne({ reservationId: savedReservation._id });
+        if (tableReservation) {
+          tableReservation.statusReservation = 'Đã hủy';
+          await tableReservation.save();
+          console.log(`Đã cập nhật trạng thái trong bảng phụ (TableReservation) cho đơn đặt chỗ ${savedReservation._id}.`);
+        }
       }
     });
 

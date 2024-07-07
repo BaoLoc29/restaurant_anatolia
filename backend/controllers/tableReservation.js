@@ -85,9 +85,9 @@ export const searchOrder = async (req, res) => {
         }
         const searchField = {
             tableId: { $regex: tableId + '$', $options: 'i' },
-            statusReservation: "Đang hoạt động"
+            statusReservation: "Chưa thanh toán"
         };
-        
+
         const tableReservations = await TableReservation.find(searchField);
 
         if (!tableReservations || tableReservations.length === 0) {

@@ -53,7 +53,7 @@ const ModalGetReservation = ({
       width={700}
     >
       <div>
-        <div className="flex flex-wrap justify-between gap-6 w-30">
+        <div className="flex gap-3 w-30">
           {orderFood.length > 0 ? (
             orderFood.map((orders) => (
               <div key={orders.reservationId}>
@@ -66,7 +66,9 @@ const ModalGetReservation = ({
                     checked={selectedTable === orders?.tableId}
                   />
                   <div className="border rounded-lg p-4 bg-gray-100 cursor-pointer hover:shadow-md">
-                    <div className="font-bold mb-2">{orders.status}</div>
+                    <div className="font-bold mb-2">
+                      {orders.statusReservation}
+                    </div>
                     <hr />
                     <div className="text-gray-600 mt-2 text-center text-lg">
                       {orders.tableId}
