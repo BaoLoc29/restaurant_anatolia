@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import schedule from 'node-schedule';
 import dotenv from 'dotenv';
 import moment from 'moment';
 import { Reservation } from '../models/reservation.js';
@@ -177,7 +178,7 @@ const createCheckoutSession = async (req, res) => {
                 }
 
                 console.log(`Đơn đặt chỗ ${savedReservation._id} đã bị hủy tự động.`);
-                
+
                 // Cập nhật trạng thái trong bảng phụ (TableReservation)
                 const tableReservation = await TableReservation.findOne({ reservationId: savedReservation._id });
                 if (tableReservation) {

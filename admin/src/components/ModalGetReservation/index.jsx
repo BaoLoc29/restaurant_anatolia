@@ -7,15 +7,15 @@ const ModalGetReservation = ({
   isModalOpen,
   handleCancel,
   handleSelectTable,
+  setSelectedDepositAmount,
   selectedTable,
 }) => {
   const [loading, setLoading] = useState(false);
   const [orderFood, setOrderFood] = useState([]);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(12);
   const [pageIndex, setPageIndex] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalDoc, setTotalDoc] = useState(0);
-
   const getOrderFood = useCallback(async () => {
     try {
       setLoading(true);
@@ -29,6 +29,7 @@ const ModalGetReservation = ({
       setLoading(false);
     }
   }, [pageSize, pageIndex]);
+
   useEffect(() => {
     getOrderFood();
   }, [getOrderFood]);
@@ -40,7 +41,9 @@ const ModalGetReservation = ({
 
   const handleRadioChange = (event, orders) => {
     const tableId = orders?.tableId;
+    const depositAmount = orders.depositAmount;
     handleSelectTable(tableId);
+    setSelectedDepositAmount(depositAmount);
   };
 
   return (
@@ -50,10 +53,10 @@ const ModalGetReservation = ({
       open={isModalOpen}
       footer={null}
       onCancel={handleCancel}
-      width={700}
+      width={680}
     >
       <div>
-        <div className="flex gap-3 w-30">
+        <div className="flex flex-wrap gap-4 w-30">
           {orderFood.length > 0 ? (
             orderFood.map((orders) => (
               <div key={orders.reservationId}>
@@ -65,9 +68,15 @@ const ModalGetReservation = ({
                     onChange={(event) => handleRadioChange(event, orders)}
                     checked={selectedTable === orders?.tableId}
                   />
-                  <div className="border rounded-lg p-4 bg-gray-100 cursor-pointer hover:shadow-md">
+                  <div
+                    className={`w-[9rem] border rounded-lg p-4 cursor-pointer hover:shadow-md ${orders.dishes && orders.dishes.length > 1 ? "bg-blue-300" : "bg-gray-100"}`}
+                  >
                     <div className="font-bold mb-2">
-                      {orders.statusReservation}
+                      {orders.dishes && orders.dishes.length > 1 ? (
+                        <span>{orders.status}</span>
+                      ) : (
+                        <span>Chưa chọn món</span>
+                      )}
                     </div>
                     <hr />
                     <div className="text-gray-600 mt-2 text-center text-lg">

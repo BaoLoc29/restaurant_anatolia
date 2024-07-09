@@ -8,15 +8,15 @@ import {
   Table,
   Alert,
   Empty,
+  Image,
 } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
-import { getPagingMenu, getAllMenu } from "../services/menu.js";
+import { getPagingMenu, getAllMenu, searchMenu } from "../services/menu.js";
 import { IoIosPrint } from "react-icons/io";
 import { MdDelete, MdLocalPrintshop } from "react-icons/md";
 import { TbBrandAirtable } from "react-icons/tb";
 import ModalGetReservation from "../components/ModalGetReservation/index.jsx";
 import QuantityInput from "./QuantityInput/index.jsx";
-import { searchMenu } from "../services/menu.js";
 
 const OrderDish = () => {
   const [form] = Form.useForm();
@@ -33,6 +33,7 @@ const OrderDish = () => {
   const [selectedTable, setSelectedTable] = useState(null);
   const [totalQuantity, setTotalQuantity] = useState(0);
   const [dataSource, setDataSource] = useState([]);
+  const [selectedDepositAmount, setSelectedDepositAmount] = useState(null);
   const { Option } = AutoComplete;
 
   const getMenus = useCallback(async () => {
@@ -98,7 +99,6 @@ const OrderDish = () => {
     }
     return name;
   };
-
   const handleSearch = async (keyword) => {
     try {
       const result = await searchMenu(keyword, "name");
@@ -133,7 +133,7 @@ const OrderDish = () => {
     setDataSource(newData);
   };
 
-  const addDishToOrder = (code, dishName, price) => {
+  const addDishToOrder = (code, dishName, price, imageMenu) => {
     const existingDishIndex = dataSource.findIndex(
       (dish) => dish.code === code
     );
@@ -148,9 +148,10 @@ const OrderDish = () => {
         code,
         dishName,
         price,
-        quantity: 1, // Default quantity
+        quantity: 1,
+        imageMenu,
       };
-      setDataSource([...dataSource, newDish]);
+      setDataSource([newDish, ...dataSource]);
     }
   };
 
@@ -160,6 +161,13 @@ const OrderDish = () => {
   };
 
   const columns = [
+    {
+      title: "Hình ảnh",
+      dataIndex: "imageMenu",
+      key: "imageMenu",
+      align: "center",
+      render: (row) => <Image width={80} src={row} />,
+    },
     {
       title: "Tên món",
       dataIndex: "dishName",
@@ -213,7 +221,6 @@ const OrderDish = () => {
       },
     },
   ];
-
   return (
     <div className="flex justify-between h-[37rem]">
       {/* Tìm món */}
@@ -230,7 +237,12 @@ const OrderDish = () => {
               <div
                 className="flex items-center"
                 onClick={() =>
-                  addDishToOrder(option.code, option.name, option.price)
+                  addDishToOrder(
+                    option.code,
+                    option.name,
+                    option.price,
+                    option.imageMenu
+                  )
                 }
               >
                 <img
@@ -250,9 +262,7 @@ const OrderDish = () => {
         <ul className="mt-3">
           <li
             className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
-              activeCategory === null
-                ? "bg-gray-300 border-gray-700"
-                : "hover:bg-gray-300 "
+              activeCategory === null ? "bg-gray-300" : "hover:bg-gray-300"
             }`}
             onClick={() => handleCategoryClick(null)}
           >
@@ -263,7 +273,7 @@ const OrderDish = () => {
               key={category}
               className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
                 activeCategory === category
-                  ? "bg-gray-300 hover:bg-gray-400"
+                  ? "bg-gray-300"
                   : "hover:bg-gray-300"
               }`}
               onClick={() => handleCategoryClick(category)}
@@ -274,7 +284,7 @@ const OrderDish = () => {
         </ul>
       </div>
       {/* Chọn món */}
-      <div className="w-[40rem] bg-white p-4 ">
+      <div className="w-[35rem] bg-white p-4 ">
         <div className="flex flex-wrap gap-[1rem] justify-start">
           {loading ? (
             <Spin
@@ -287,7 +297,7 @@ const OrderDish = () => {
                 key={menu._id}
                 hoverable
                 style={{
-                  width: 192,
+                  width: 165,
                 }}
                 bodyStyle={{ padding: 7 }}
                 cover={
@@ -300,19 +310,26 @@ const OrderDish = () => {
                     }}
                   />
                 }
-                onClick={() => addDishToOrder(menu.code, menu.name, menu.price)}
+                onClick={() =>
+                  addDishToOrder(
+                    menu.code,
+                    menu.name,
+                    menu.price,
+                    menu.imageMenu
+                  )
+                }
               >
-                <h1 className="m-2 font-bold text-base text-center">
-                  {truncatedName(menu.name, 20)}
+                <h1 className="my-2 font-bold text-base text-center">
+                  {truncatedName(menu.name, 15)}
                 </h1>
-                <p className="m-2 text-base text-center">
+                <p className="my-2 text-base text-center">
                   {menu.price.toLocaleString()} đ
                 </p>
               </Card>
             ))
           ) : (
             <div className="flex items-center justify-center w-full h-[33rem] bg-gray-200">
-              <Empty />
+              <Empty description="Không có dữ liệu" />
             </div>
           )}
         </div>
@@ -329,7 +346,7 @@ const OrderDish = () => {
         />
       </div>
       {/* Đặt món */}
-      <div className="w-[32rem] h-[37rem] bg-white p-4">
+      <div className="w-[38rem] h-[37rem] bg-white p-4">
         <div className="flex mb-2 justify-between w-full">
           <Alert
             message={
@@ -359,19 +376,31 @@ const OrderDish = () => {
             handleCancel={handleCloseModal}
             handleSelectTable={handleSelectTable}
             selectedTable={selectedTable}
+            setSelectedDepositAmount={setSelectedDepositAmount}
           />
         </div>
         {/* Đặt món */}
         <div className="h-[32rem] flex flex-col justify-between">
           <div className="h-[200rem] overflow-y-auto mt-2 mb-0">
-            <Table
-              columns={columns}
-              dataSource={dataSource}
-              pagination={false}
-              className="min-w-full"
-            />
+            {dataSource.length > 0 ? (
+              <Table
+                columns={columns}
+                dataSource={dataSource}
+                pagination={false}
+                className="min-w-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-[19rem] bg-gray-100">
+                <Empty
+                  description={
+                    <span className="font-bold text-gray-400">
+                      Chưa có món ăn nào được thêm
+                    </span>
+                  }
+                />
+              </div>
+            )}
           </div>
-
           <div className="h-[10rem] mb-3">
             <div className="flex justify-between mt-4">
               <h1>Tạm tính ({totalQuantity} món)</h1>
@@ -385,7 +414,11 @@ const OrderDish = () => {
 
             <div className="flex justify-between mt-3">
               <h1>Đã đặt cọc</h1>
-              <p className="font-bold">0 đ</p>
+              <p className="font-bold">
+                {selectedDepositAmount
+                  ? `${selectedDepositAmount.toLocaleString()} đ`
+                  : "0 đ"}
+              </p>
             </div>
           </div>
 
@@ -411,9 +444,12 @@ const OrderDish = () => {
             <div className="flex flex-col items-end justify-end text-right">
               <h1 className="font-bold">Thành Tiền</h1>
               <p className="text-green-600 font-bold mt-1">
-                {dataSource
-                  .reduce((sum, item) => sum + item.price * item.quantity, 0)
-                  .toLocaleString()}{" "}
+                {(
+                  dataSource.reduce(
+                    (sum, item) => sum + item.price * item.quantity,
+                    0
+                  ) - selectedDepositAmount
+                ).toLocaleString()}{" "}
                 đ
               </p>
             </div>

@@ -143,17 +143,7 @@ export const send_reservation = async (req, res, next) => {
   }
 };
 
-export const getPagingReservation = async (req, res) => {
-  try {
-    const { pageSize, pageIndex } = req.query;
-    const reservations = await Reservation.find().skip(pageSize * (pageIndex - 1)).limit(pageSize).sort({ createdAt: "desc" });
-    const countReservation = await Reservation.countDocuments();
-    const totalPage = Math.ceil(countReservation / pageSize);
-    return res.status(200).json({ reservations, totalPage, count: countReservation });
-  } catch (error) {
-    return res.status(500).json({ message: error.message });
-  }
-};
+
 export const editReservation = async (req, res) => {
   try {
     const { id } = req.params;
@@ -187,6 +177,12 @@ export const editReservation = async (req, res) => {
 
     const updatedTable = await Table.findOneAndUpdate({ id_table: tableId }, { status: tableStatus }, { new: true });
     if (!updatedTable) return res.status(200).json({ success: false, message: 'Không tìm thấy đơn đặt bàn này!' });
+
+    const tableReservation = await TableReservation.findOne({ reservationId: id });
+    if (tableReservation) {
+      tableReservation.statusReservation = status;
+      await tableReservation.save();
+    }
 
     return res.status(200).json({ success: true, message: 'Cập nhật đơn đặt bàn thành công.' });
   } catch (error) {
@@ -280,4 +276,15 @@ export const getAllReservation = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 }
+export const getPagingReservation = async (req, res) => {
+  try {
+    const { pageSize, pageIndex } = req.query;
+    const reservations = await Reservation.find().skip(pageSize * (pageIndex - 1)).limit(pageSize).sort({ createdAt: "desc" });
+    const countReservation = await Reservation.countDocuments();
+    const totalPage = Math.ceil(countReservation / pageSize);
+    return res.status(200).json({ reservations, totalPage, count: countReservation });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
 
