@@ -41,7 +41,7 @@ const ModalCreateTable = ({
         top: 50,
       }}
     >
-      <div className="text-center text-xl font-bold mb-5">
+      <div className="text-center text-xl font-bold mb-2">
         <h2>{title}</h2>
       </div>
       <Spin spinning={loadingData}>
@@ -58,7 +58,7 @@ const ModalCreateTable = ({
                 <Input
                   id="id_table"
                   placeholder="Mã bàn"
-                  className="text-base"
+                  size="large"
                   disabled={true}
                 />
               </Form.Item>
@@ -82,11 +82,7 @@ const ModalCreateTable = ({
               },
             ]}
           >
-            <Input
-              placeholder="Sức chứa của bàn"
-              className="text-base"
-              type="number"
-            />
+            <Input placeholder="Sức chứa của bàn" size="large" type="number" />
           </Form.Item>
 
           <label htmlFor="location" className="block text-sm font-bold mb-1">
@@ -99,7 +95,7 @@ const ModalCreateTable = ({
               { required: true, message: "Vị trí bàn không được để trống!" },
             ]}
           >
-            <Select placeholder="--Chọn vị trí bàn--" className="text-base">
+            <Select placeholder="--Chọn vị trí bàn--" size="large">
               <Select.Option value="Cạnh cửa sổ">Cạnh cửa sổ</Select.Option>
               <Select.Option value="Ngoài trời">Ngoài trời</Select.Option>
               <Select.Option value="Trung tâm">Trung tâm</Select.Option>
@@ -121,10 +117,7 @@ const ModalCreateTable = ({
                   },
                 ]}
               >
-                <Select
-                  placeholder="--Chọn trạng thái bàn--"
-                  className="text-base"
-                >
+                <Select placeholder="--Chọn trạng thái bàn--" size="large">
                   <Select.Option value="Còn trống">Còn trống</Select.Option>
                   <Select.Option value="Đang sử dụng">
                     Đang sử dụng
@@ -138,15 +131,15 @@ const ModalCreateTable = ({
             </>
           )}
 
-          <div className="flex justify-end">
-            <Button onClick={handleCancel} className="mr-2 mb-2">
+          <div className="flex justify-end mt-4">
+            <Button onClick={handleCancel} className="mr-2" size="large">
               Hủy
             </Button>
             <Button
               loading={loading}
               type="primary"
               htmlType="submit"
-              className="mb-2"
+              size="large"
             >
               {selectedTable ? "Cập nhật" : "Thêm mới"}
             </Button>

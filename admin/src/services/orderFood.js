@@ -6,6 +6,7 @@ const getPagingOrderFood = ({ pageSize, pageIndex }) => {
 const getDetailOrderFood = (reservationId) => {
     return axiosInstanceAuth.get(`/order/get-detail-order/${reservationId}`);
 }
+
 const createOrderFood = (reservationId, data) => {
     return axiosInstanceAuth.post(`/order/order-food/${reservationId}`, data)
 }

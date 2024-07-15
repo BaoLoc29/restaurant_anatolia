@@ -7,7 +7,6 @@ import {
   Form,
   Input,
   Row,
-  Select,
   Space,
   TimePicker,
 } from "antd";
@@ -98,8 +97,6 @@ const DrawerCreateOrder = ({
         onFinish={handleSubmit}
         initialValues={{
           email: "user@gmail.com",
-          deposit: false,
-          status: "Đang hoạt động",
         }}
       >
         <Row gutter={16}>
@@ -111,7 +108,7 @@ const DrawerCreateOrder = ({
                 { required: true, message: "Vui lòng nhập tên khách hàng!" },
               ]}
             >
-              <Input placeholder="Nhập tên khách hàng" />
+              <Input placeholder="Nhập tên khách hàng" size="large" />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -122,7 +119,7 @@ const DrawerCreateOrder = ({
                 { type: "email", message: "Email không đúng định dạng!" },
               ]}
             >
-              <Input placeholder="Nhập email khách hàng" />
+              <Input placeholder="Nhập email khách hàng" size="large" />
             </Form.Item>
           </Col>
         </Row>
@@ -143,7 +140,7 @@ const DrawerCreateOrder = ({
                 },
               ]}
             >
-              <Input placeholder="Nhập số điện thoại" />
+              <Input placeholder="Nhập số điện thoại" size="large" />
             </Form.Item>
           </Col>
           <Col span={12}>
@@ -161,7 +158,11 @@ const DrawerCreateOrder = ({
                 },
               ]}
             >
-              <Input placeholder="Nhập số lượng khách" type="number" />
+              <Input
+                placeholder="Nhập số lượng khách"
+                type="number"
+                size="large"
+              />
             </Form.Item>
           </Col>
         </Row>
@@ -173,6 +174,7 @@ const DrawerCreateOrder = ({
               rules={[{ required: true, message: "Vui lòng chọn ngày đến!" }]}
             >
               <DatePicker
+                size="large"
                 className="w-full"
                 placeholder="--Chọn ngày đến--"
                 onChange={onChangeDate}
@@ -190,49 +192,12 @@ const DrawerCreateOrder = ({
                 className="w-full"
                 placeholder="--Chọn giờ đến--"
                 format={"HH:mm"}
+                size="large"
                 onChange={onChangeTime}
                 disabled={!date}
                 disabledHours={disabledHours}
                 disabledMinutes={disabledMinutes}
               />
-            </Form.Item>
-          </Col>
-        </Row>
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              name="deposit"
-              label={<span className="font-bold">Đặt cọc</span>}
-              rules={[
-                {
-                  required: true,
-                  message: "Vui lòng chọn đặt cọc hoặc không!",
-                },
-              ]}
-            >
-              <Select placeholder="--Lựa chọn đặt cọc--" className="text-base">
-                <Select.Option value={false}>Không cọc</Select.Option>
-                <Select.Option value={true}>Đặt cọc (200.000đ)</Select.Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="status"
-              label={<span className="font-bold">Trạng thái</span>}
-              rules={[
-                {
-                  required: true,
-                  message: "Hãy chọn một trạng thái đơn hàng!",
-                },
-              ]}
-            >
-              <Select placeholder="--Chọn trạng thái--" className="text-base">
-                <Select.Option value="Đang hoạt động">
-                  Đang hoạt động
-                </Select.Option>
-                <Select.Option value="Đã đặt trước">Đã đặt trước</Select.Option>
-              </Select>
             </Form.Item>
           </Col>
         </Row>
@@ -244,14 +209,22 @@ const DrawerCreateOrder = ({
             >
               <Input.TextArea
                 rows={4}
+                size="large"
                 placeholder="Nhập yêu cầu của khách hàng"
               />
             </Form.Item>
           </Col>
         </Row>
         <Space className="float-right">
-          <Button onClick={onClose}>Hủy bỏ</Button>
-          <Button type="primary" onClick={handleSubmit} loading={loading}>
+          <Button onClick={onClose} size="large">
+            Hủy bỏ
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            size="large"
+            loading={loading}
+          >
             Đặt ngay
           </Button>
         </Space>

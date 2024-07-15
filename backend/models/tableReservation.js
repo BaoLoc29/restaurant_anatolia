@@ -57,6 +57,10 @@ const TableReservationSchema = new mongoose.Schema({
         totalPerDish: {
             type: Number,
             required: true
+        },
+        image: {
+            type: String,
+            required: true
         }
     }],
     totalAmount: {

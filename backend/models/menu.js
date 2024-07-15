@@ -31,8 +31,12 @@ const Menu = new mongoose.Schema({
     },
     status: {
         type: String,
-        require: true,
+        required: true,
         default: "Còn món"
+    },
+    imageMenu: {
+        type: String,
+        required: true
     }
 
 }, { timestamps: true })

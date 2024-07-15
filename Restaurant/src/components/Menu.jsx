@@ -1,29 +1,39 @@
-import React from 'react'
-import {data} from "../restApi.json"
-const Menu = () => {
-  return (
-    <section className='menu' id='menu'>
-        <div className="container">
-            <div className="heading_section">
-                <h1 className='heading'>POPULAR DISHES</h1>
-                <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Fuga, iusto dolorem! Voluptatibus ipsum nam mollitia architecto. Soluta pariatur eius et recusandae veritatis. Quasi, et molestias!</p>
-            </div>
-            <div className="dishes_container">
-                {
-                    data[0].dishes.map(element=>{
-                        return(
-                            <div className="card" key={element.id}>
-                                <img src={element.image} alt={element.title} />
-                                <h3>{element.title}</h3>
-                                <button>{element.category}</button>
-                            </div>
-                        )
-                    })
-                }
-            </div>
-        </div>
-    </section>
-  )
-}
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { data } from "../restApi.json";
 
-export default Menu
+const Menu = () => {
+  const navigate = useNavigate();
+  const handleCategoryClick = (category) => {
+    navigate("/menu-res", { state: { category } });
+    window.scrollTo(0, 0);
+  };
+  return (
+    <section className="menu" id="menu">
+      <div className="container">
+        <div className="heading_section">
+          <h1 className="heading">POPULAR DISHES</h1>
+          <p>
+            Đến với Anatolia thực khách sẽ được khám phá ra được kho tàng ẩm
+            thực nơi đây cùng đa dạng các món ăn theo từng chủ đề
+          </p>
+        </div>
+        <div className="dishes_container">
+          {data[0].dishes.map((element) => (
+            <div
+              className="card"
+              key={element.id}
+              onClick={() => handleCategoryClick(element.category)}
+            >
+              <img src={element.image} alt={element.title} />
+              <h3>{element.title}</h3>
+              <button>{element.category}</button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+export default Menu;

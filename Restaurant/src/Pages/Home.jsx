@@ -7,6 +7,7 @@ import Team from "../components/Team.jsx";
 import Reservation from "../components/Reservation.jsx";
 import Footer from "../components/Footer.jsx";
 import Qualities from "./../components/Quanlities";
+import RestaurantCardList from "../components/R_C_List/index.jsx";
 
 const Home = () => {
   return (
@@ -20,6 +21,7 @@ const Home = () => {
       <section id="reservation">
         <Reservation />
       </section>
+      <RestaurantCardList />
       <Footer />
     </>
   );

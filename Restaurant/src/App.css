@@ -153,8 +153,7 @@ nav svg {
     width: 100%;
     border-radius: 0;
   }
-}
-/**********************************************************************************************************************/
+} /**********************************************************************************************************************/
 
 /********************** HERO SECTION COMPONENT STYLING **************************/
 /**********************************************************************************************************************/
@@ -338,7 +337,7 @@ nav svg {
   max-width: 1500px;
   min-width: 1500px;
   display: flex;
-  padding: 10px 50px;
+  padding: 0 100px;
 }
 .about .container .banner {
   flex: 1;
@@ -396,9 +395,9 @@ nav svg {
   color: #111;
 }
 @media (max-width: 1520px) {
-  /* .about {
+  .about {
     padding: 30px 20px;
-  } */
+  }
   .about .container {
     min-width: fit-content;
   }
@@ -548,10 +547,18 @@ nav svg {
 .menu .container .dishes_container .card img {
   width: 100%;
   height: 370px;
+  cursor: pointer;
 }
 .menu .container .dishes_container .card h3 {
   font-size: 1.5rem;
   font-weight: 500;
+  text-align: center;
+  color: black;
+  cursor: pointer;
+}
+.menu .container .dishes_container .card :hover {
+  color: orange;
+  text-decoration: none;
 }
 .menu .container .dishes_container .card button {
   position: absolute;
@@ -563,6 +570,7 @@ nav svg {
   border: none;
   border-radius: 20px;
   font-size: 16px;
+  text-decoration: none;
 }
 .menu .container .dishes_container .card:hover img {
   transition: 0.3s;
@@ -733,7 +741,6 @@ nav svg {
 }
 .who_are_we .container .image_banner .gradient_bg {
   position: absolute;
-  left: -80px;
   top: 0;
 }
 @media (max-width: 1520px) {
@@ -1059,7 +1066,6 @@ footer .container .banner .right {
   }
 }
 /**********************************************************************************************************************/
-
 /******************* NOT FOUND PAGE STYLING **************/
 /**********************************************************************************************************************/
 .notFound {

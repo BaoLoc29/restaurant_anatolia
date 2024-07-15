@@ -36,7 +36,8 @@ export const orderFood = async (req, res) => {
                     dishName: menuDish.name,
                     price: menuDish.price,
                     quantity: dish.quantity,
-                    totalPerDish: menuDish.price * dish.quantity
+                    totalPerDish: menuDish.price * dish.quantity,
+                    image: menuDish.imageMenu
                 });
             }
         });

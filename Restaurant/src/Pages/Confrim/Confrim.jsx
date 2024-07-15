@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast";
 import { scroller } from "react-scroll";
 import { Radio } from "antd";
 import "./Confrim.css";
@@ -106,7 +105,7 @@ const Confirm = () => {
 
   const formatDateToMMDDYYYY = (dateString) => {
     const [year, month, day] = dateString.split("-");
-    return ` ${day} /${month}/${year}`;
+    return ` ${day}/${month}/${year}`;
   };
 
   if (!reservationData) {
@@ -154,7 +153,7 @@ const Confirm = () => {
                       setState((prevState) => ({
                         ...prevState,
                         depositOption: e.target.value,
-                        errorMessage: "", // Xóa thông báo lỗi khi thay đổi
+                        errorMessage: "", 
                       }))
                     }
                   >

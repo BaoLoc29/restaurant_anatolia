@@ -1,13 +1,14 @@
 import { Empty, Modal, Pagination } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
-import { getPagingOrderFood } from "../../services/orderFood.js";
+import {
+  getPagingOrderFood,
+} from "../../services/orderFood.js";
 
 const ModalGetReservation = ({
   title,
   isModalOpen,
   handleCancel,
   handleSelectTable,
-  setSelectedDepositAmount,
   selectedTable,
 }) => {
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,7 @@ const ModalGetReservation = ({
   const [pageIndex, setPageIndex] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalDoc, setTotalDoc] = useState(0);
+
   const getOrderFood = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,10 +42,7 @@ const ModalGetReservation = ({
   };
 
   const handleRadioChange = (event, orders) => {
-    const tableId = orders?.tableId;
-    const depositAmount = orders.depositAmount;
-    handleSelectTable(tableId);
-    setSelectedDepositAmount(depositAmount);
+    handleSelectTable(orders.reservationId);
   };
 
   return (

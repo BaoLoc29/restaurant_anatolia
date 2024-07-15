@@ -1,25 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Input } from "antd";
 
 const QuantityInput = ({ value, onChange }) => {
-  const [quantity, setQuantity] = useState(value);
-
-  useEffect(() => {
-    setQuantity(value);
-  }, [value]);
-
   const handleInputChange = (e) => {
     const newQuantity = Math.max(1, parseInt(e.target.value, 10) || 1);
-    setQuantity(newQuantity);
     onChange(newQuantity);
   };
 
   return (
     <Input
       type="number"
-      value={quantity}
+      value={value}
       onChange={handleInputChange}
-      className="w-16 text-center"
+      className="w-14"
     />
   );
 };

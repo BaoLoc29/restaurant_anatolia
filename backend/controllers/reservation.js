@@ -1,10 +1,12 @@
-import schedule from 'node-schedule';
 import moment from 'moment';
 import { Reservation } from "../models/reservation.js";
 import { TableReservation } from "../models/tableReservation.js"
 import Table from "../models/table.js";
 import joi from "joi";
 import dayjs from "dayjs";
+import { scheduleCancellation } from '../middlewares/cancellation.js';
+import { scheduleDepositUpdate } from '../middlewares/depositUpdate.js';
+
 
 const synonymKeywords = {
   "Cạnh cửa sổ": ["gần cửa sổ", "sát cửa sổ", "view đẹp"],
@@ -82,7 +84,6 @@ const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => 
   }
   throw new Error('Hiện tại không còn bàn phù hợp. Vui lòng thử lại hoặc liên hệ nhà hàng để biết thêm chi tiết.');
 };
-
 export const send_reservation = async (req, res, next) => {
   try {
     const { name, email, date, time, phone, guests, notes, deposit, depositAmount, status } = req.body;
@@ -108,42 +109,20 @@ export const send_reservation = async (req, res, next) => {
     if (savedReservation.status === 'Đang hoạt động') availableTable.status = 'Đang sử dụng';
     await availableTable.save();
 
-    schedule.scheduleJob(reservationDateTime.toDate(), async function () {
-      const tableToUpdate = await Table.findOne({ id_table: availableTable.id_table });
-      if (tableToUpdate.status !== 'Đang sử dụng') {
-        tableToUpdate.status = deposit ? 'Đã đặt cọc' : 'Chưa đặt cọc';
-        await tableToUpdate.save();
+    await scheduleDepositUpdate(reservationDateTime, availableTable, savedReservation);
+    await scheduleCancellation(reservationDateTime, savedReservation);
+
+    return res.status(200).json({
+      success: true, message: 'Đặt bàn thành công!',
+      reservation: {
+        ...savedReservation.toObject(),
+        table: availableTable.id_table
       }
     });
-
-    schedule.scheduleJob(reservationDateTime.clone().add(3, 'minutes').toDate(), async function () {
-      const reservation = await Reservation.findById(savedReservation._id);
-      if (reservation && reservation.status === 'Đã đặt trước') {
-        reservation.status = 'Đã hủy';
-        await reservation.save();
-        const tableToUpdate = await Table.findOne({ id_table: reservation.table });
-        if (tableToUpdate) {
-          tableToUpdate.status = 'Còn trống';
-          await tableToUpdate.save();
-        }
-        console.log(`Đơn đặt chỗ ${savedReservation._id} đã bị hủy tự động.`);
-        // Cập nhật trạng thái trong bảng phụ (TableReservation)
-        const tableReservation = await TableReservation.findOne({ reservationId: savedReservation._id });
-        if (tableReservation) {
-          tableReservation.statusReservation = 'Đã hủy';
-          await tableReservation.save();
-          console.log(`Đã cập nhật trạng thái trong bảng phụ (TableReservation) cho đơn đặt chỗ ${savedReservation._id}.`);
-        }
-      }
-    });
-
-    return res.status(200).json({ success: true, message: 'Đặt bàn thành công!', reservation: { ...savedReservation.toObject(), table: availableTable.id_table } });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
-
-
 export const editReservation = async (req, res) => {
   try {
     const { id } = req.params;
@@ -221,7 +200,8 @@ export const getOrderByDate = async (req, res) => {
       date: {
         $gte: formattedDate,
         $lt: endDate
-      }
+      },
+      status: { $ne: "Chờ đặt cọc" }
     }).skip((pageIndex - 1) * pageSize)
       .limit(parseInt(pageSize))
       .sort({ time: "asc" });
@@ -230,7 +210,7 @@ export const getOrderByDate = async (req, res) => {
       date: {
         $gte: formattedDate,
         $lt: endDate
-      }
+      }, status: { $ne: "Chờ đặt cọc" }
     });
 
     const totalPage = Math.ceil(countReservation / pageSize);
@@ -261,7 +241,7 @@ export const searchOrderByPhone = async (req, res) => {
 };
 export const getAllReservation = async (req, res) => {
   try {
-    const reservations = await Reservation.find().sort({ createdAt: "desc" });
+    const reservations = await Reservation.find({ status: "Đã đặt trước" }).sort({ createdAt: "desc" });
 
     const totalReservation = await Reservation.countDocuments();
 

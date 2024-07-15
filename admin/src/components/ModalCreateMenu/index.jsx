@@ -1,7 +1,27 @@
 import React, { useEffect, useCallback, useState } from "react";
-import { Form, Input, Modal, Select, Button, Row, Col, Spin } from "antd";
+import {
+  Form,
+  Input,
+  Modal,
+  Select,
+  Button,
+  Row,
+  Col,
+  Spin,
+  Upload,
+  Image,
+  message,
+} from "antd";
 import { getMenuById } from "../../services/menu.js";
+import { PlusOutlined } from "@ant-design/icons";
 const { TextArea } = Input;
+const getBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 
 const ModalCreateMenu = ({
   form,
@@ -13,6 +33,11 @@ const ModalCreateMenu = ({
   selectedMenu,
 }) => {
   const [loadingData, setLoadingData] = useState(false);
+  const [file, setFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+
   const getMenu = useCallback(async () => {
     try {
       setLoadingData(true);
@@ -26,7 +51,9 @@ const ModalCreateMenu = ({
         unit: result.data.menu.unit,
         price: result.data.menu.price,
         status: result.data.menu.status,
+        imageMenu: result.data.menu.imageMenu,
       });
+      setImageUrl(result.data.menu.imageMenu);
       setLoadingData(false);
     } catch (error) {
       setLoadingData(false);
@@ -38,6 +65,36 @@ const ModalCreateMenu = ({
     if (selectedMenu) getMenu();
   }, [selectedMenu, getMenu]);
 
+  const onFinish = async (values) => {
+    try {
+      await handleOk(values, file);
+      form.resetFields();
+    } catch (error) {
+      console.error(error);
+      message.error(
+        selectedMenu
+          ? "Sửa ảnh món ăn thất bại!"
+          : "Thêm ảnh món ăn thành công!"
+      );
+    }
+  };
+
+  const handlePreview = async (file) => {
+    if (!file.url && !file.preview) {
+      file.preview = await getBase64(file.originFileObj);
+    }
+    setPreviewImage(file.url || file.preview);
+    setPreviewOpen(true);
+  };
+
+  const handleChangeFile = (info) => {
+    const fileList = [...info.fileList];
+    if (fileList.length > 0) {
+      setFile(fileList[0].originFileObj);
+      setImageUrl(null);
+    }
+  };
+
   return (
     <Modal
       open={isModalOpen}
@@ -45,14 +102,65 @@ const ModalCreateMenu = ({
       onCancel={handleCancel}
       width={800}
       style={{
-        top: 50,
+        top: 30,
       }}
     >
-      <div className="text-center text-xl font-bold mb-5">
+      <div className="text-center text-xl font-bold mb-4">
         <h2>{title}</h2>
       </div>
       <Spin spinning={loadingData}>
-        <Form form={form} name="Menus" onFinish={handleOk}>
+        <Form form={form} name="Menus" onFinish={onFinish}>
+          <div className="flex justify-center gap-2 mb-4">
+            {selectedMenu && imageUrl && (
+              <div className="text-center">
+                <Image src={imageUrl} alt="Preview" width={150} height={100} />
+              </div>
+            )}
+            <Form.Item
+              name="imageMenu"
+              style={{ marginBottom: 10 }}
+              rules={[
+                {
+                  required: true,
+                  message: "Ảnh món ăn không được để trống!",
+                },
+              ]}
+            >
+              <Upload
+                className="flex justify-center"
+                name="image"
+                beforeUpload={() => false}
+                maxCount={1}
+                listType="picture-card"
+                accept="image/*"
+                onPreview={handlePreview}
+                onChange={handleChangeFile}
+              >
+                <Button
+                  className="flex flex-col items-center justify-center w-[6rem] h-[6rem]"
+                  type="button"
+                >
+                  <PlusOutlined />
+                  <div className="mt-2">Thêm ảnh</div>
+                </Button>
+              </Upload>
+              {previewImage && (
+                <Image
+                  wrapperStyle={{
+                    display: "none",
+                  }}
+                  preview={{
+                    visible: previewOpen,
+                    onVisibleChange: (visible) => setPreviewOpen(visible),
+                    afterOpenChange: (visible) =>
+                      !visible && setPreviewImage(""),
+                  }}
+                  src={previewImage}
+                />
+              )}
+            </Form.Item>
+          </div>
+
           <Row gutter={16}>
             <Col span={12}>
               {selectedMenu && (
@@ -67,7 +175,7 @@ const ModalCreateMenu = ({
                     <Input
                       id="code"
                       placeholder="Mã món ăn"
-                      className="text-base"
+                      size="large"
                       disabled={true}
                     />
                   </Form.Item>
@@ -87,7 +195,7 @@ const ModalCreateMenu = ({
                   },
                 ]}
               >
-                <Input placeholder="Tên món ăn" className="text-base" />
+                <Input placeholder="Tên món ăn" size="large" />
               </Form.Item>
 
               {selectedMenu && (
@@ -102,7 +210,7 @@ const ModalCreateMenu = ({
                     <Input
                       id="unit"
                       placeholder="Đơn vị khẩu phần"
-                      className="text-base"
+                      size="large"
                       disabled={true}
                     />
                   </Form.Item>
@@ -126,11 +234,7 @@ const ModalCreateMenu = ({
                   },
                 ]}
               >
-                <Input
-                  placeholder="Giá món ăn"
-                  className="text-base"
-                  type="number"
-                />
+                <Input placeholder="Giá món ăn" size="large" type="number" />
               </Form.Item>
               <label
                 htmlFor="category"
@@ -149,7 +253,7 @@ const ModalCreateMenu = ({
                   },
                 ]}
               >
-                <Select placeholder="--Chọn phân loại--" className="text-base">
+                <Select placeholder="--Chọn phân loại--" size="large">
                   <Select.Option value="Bữa sáng">Bữa sáng</Select.Option>
                   <Select.Option value="Bữa trưa">Bữa trưa</Select.Option>
                   <Select.Option value="Bữa tối">Bữa tối</Select.Option>
@@ -178,7 +282,7 @@ const ModalCreateMenu = ({
                   },
                 ]}
               >
-                <Select placeholder="--Chọn phân loại--" className="text-base">
+                <Select placeholder="--Chọn phân loại--" size="large">
                   <Select.Option value="Món ăn">Món ăn</Select.Option>
                   <Select.Option value="Đồ uống">Đồ uống</Select.Option>
                 </Select>
@@ -202,10 +306,7 @@ const ModalCreateMenu = ({
                       },
                     ]}
                   >
-                    <Select
-                      placeholder="--Chọn trạng thái món ăn--"
-                      className="text-base"
-                    >
+                    <Select placeholder="--Chọn trạng thái--" size="large">
                       <Select.Option value="Còn món">Còn món</Select.Option>
                       <Select.Option value="Hết món">Hết món</Select.Option>
                     </Select>
@@ -217,33 +318,22 @@ const ModalCreateMenu = ({
                 htmlFor="description"
                 className="block text-sm font-bold mb-1"
               >
-                Mô tả: <span className="text-red-500">*</span>
+                Mô tả món ăn:
               </label>
-              <Form.Item
-                name="description"
-                style={{ marginBottom: 10 }}
-                rules={[
-                  { required: true, message: "Mô tả không được để trống!" },
-                ]}
-              >
-                <TextArea
-                  rows={4}
-                  placeholder="Mô tả món ăn"
-                  className="text-base"
-                />
+              <Form.Item name="description" style={{ marginBottom: 10 }}>
+                <TextArea rows={4} placeholder="Mô tả món ăn" size="large" />
               </Form.Item>
             </Col>
           </Row>
-
-          <div className="flex justify-end">
-            <Button onClick={handleCancel} className="mr-2 mb-2">
+          <div className="flex justify-end mt-3">
+            <Button onClick={handleCancel} className="mr-2" size="large">
               Hủy
             </Button>
             <Button
               loading={loading}
               type="primary"
               htmlType="submit"
-              className="mb-2"
+              size="large"
             >
               {selectedMenu ? "Cập nhật" : "Thêm mới"}
             </Button>
