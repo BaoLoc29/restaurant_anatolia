@@ -10,19 +10,20 @@ const About = () => {
           <div className="banner">
             <div className="top">
               <h1 className="heading">ABOUT US</h1>
-              <p>The only thing we're serious about is food.</p>
+              <p>Những món ăn tinh tế và sáng tạo.</p>
             </div>
             <p className="mid">
-              Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-              Provident possimus optio adipisci dolores impedit illum iusto
-              perferendis, laudantium quod accusamus consequuntur consectetur,
-              tempore nulla error iure reiciendis dolorem assumenda.
-              Necessitatibus fugit asperiores totam rem esse exercitationem
-              iusto ipsum qui dolore ex, accusantium repellat mollitia
-              repellendus.
+              Chào mừng đến với nhà hàng Anatolia – điểm đến lý tưởng cho những
+              ai yêu thích ẩm thực tinh tế và phong cách phục vụ chuyên nghiệp.
+              Tại Anatolia, chúng tôi tự hào mang đến cho thực khách những món
+              ăn ngon miệng được chế biến từ những nguyên liệu tươi ngon, dưới
+              bàn tay tài hoa của các đầu bếp giàu kinh nghiệm. Không gian nhà
+              hàng sang trọng, ấm cúng cùng với dịch vụ chu đáo chắc chắn sẽ
+              mang đến cho quý khách những trải nghiệm ẩm thực tuyệt vời và đáng
+              nhớ. Anatolia – nơi hội tụ của hương vị và sự sáng tạo.
             </p>
-            <Link to={"/"}>
-              Explore Menu{" "}
+            <Link to={"/Menu-all"}>
+              Khám phá Menu{" "}
               <span>
                 <HiOutlineArrowRight />
               </span>

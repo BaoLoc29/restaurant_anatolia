@@ -42,10 +42,10 @@ const ModalCreateUser = ({
       footer={null}
       onCancel={handleCancel}
       style={{
-        top: 50,
+        top: 18,
       }}
     >
-      <div className="text-center text-xl font-bold mb-5">
+      <div className="text-center text-xl font-bold mb-2">
         <h2>{title}</h2>
       </div>
       <Spin spinning={loadingData}>
@@ -59,13 +59,16 @@ const ModalCreateUser = ({
                 name="e_code"
                 style={{ marginBottom: 10 }}
                 rules={[
-                  { required: true, message: "Mã nhân viên không được để trống" },
+                  {
+                    required: true,
+                    message: "Mã nhân viên không được để trống",
+                  },
                 ]}
               >
                 <Input
                   id="e_code"
                   placeholder="Mã nhân viên"
-                  className="text-base"
+                  size="large"
                   disabled={true}
                 />
               </Form.Item>
@@ -82,7 +85,7 @@ const ModalCreateUser = ({
               { required: true, message: "Tên nhân viên không được để trống" },
             ]}
           >
-            <Input placeholder="Họ và tên" className="text-base" />
+            <Input placeholder="Họ và tên" size="large" />
           </Form.Item>
 
           <label htmlFor="email" className="block text-sm font-bold mb-1">
@@ -96,7 +99,11 @@ const ModalCreateUser = ({
               { required: true, message: "Email không được để trống!" },
             ]}
           >
-            <Input placeholder="E-mail" disabled={!!selectedUser} />
+            <Input
+              placeholder="E-mail"
+              disabled={!!selectedUser}
+              size="large"
+            />
           </Form.Item>
 
           <label htmlFor="phone" className="block text-sm font-bold mb-1">
@@ -113,7 +120,7 @@ const ModalCreateUser = ({
               { required: true, message: "Số điện thoại không được để trống!" },
             ]}
           >
-            <Input placeholder="Số điện thoại" />
+            <Input placeholder="Số điện thoại" size="large" />
           </Form.Item>
 
           <label htmlFor="gender" className="block text-sm font-bold mb-1">
@@ -129,7 +136,7 @@ const ModalCreateUser = ({
               },
             ]}
           >
-            <Select placeholder="--Chọn giới tính--" className="text-base">
+            <Select placeholder="--Chọn giới tính--" size="large">
               <Select.Option value="true">Nam</Select.Option>
               <Select.Option value="false">Nữ</Select.Option>
             </Select>
@@ -148,7 +155,7 @@ const ModalCreateUser = ({
               },
             ]}
           >
-            <Select placeholder="--Chọn chức vụ--" className="text-base">
+            <Select placeholder="--Chọn chức vụ--" size="large">
               <Select.Option value="Quản lý">Quản lý</Select.Option>
               <Select.Option value="Nhân viên">Nhân viên</Select.Option>
             </Select>
@@ -156,7 +163,10 @@ const ModalCreateUser = ({
 
           {!selectedUser && (
             <>
-              <label htmlFor="password" className="block text-sm font-bold mb-1">
+              <label
+                htmlFor="password"
+                className="block text-sm font-bold mb-1"
+              >
                 Mật khẩu: <span className="text-red-500">*</span>
               </label>
               <Form.Item
@@ -169,7 +179,7 @@ const ModalCreateUser = ({
                 ]}
                 hasFeedback
               >
-                <Input.Password placeholder="Nhập mật khẩu" />
+                <Input.Password placeholder="Nhập mật khẩu" size="large" />
               </Form.Item>
             </>
           )}
@@ -200,13 +210,13 @@ const ModalCreateUser = ({
                   }),
                 ]}
               >
-                <Input.Password placeholder="Nhập lại mật khẩu" />
+                <Input.Password placeholder="Nhập lại mật khẩu" size="large" />
               </Form.Item>
             </>
           )}
 
-          <div className="flex justify-end">
-            <Button onClick={handleCancel} className="mr-2 mb-2">
+          <div className="flex justify-end mt-5">
+            <Button onClick={handleCancel} className="mr-2 mb-2" size="large">
               Hủy
             </Button>
             <Button
@@ -214,6 +224,7 @@ const ModalCreateUser = ({
               type="primary"
               htmlType="submit"
               className="mb-2"
+              size="large"
             >
               {selectedUser ? "Cập nhật" : "Thêm mới"}
             </Button>

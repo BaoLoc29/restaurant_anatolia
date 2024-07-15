@@ -1,0 +1,150 @@
+@import url("https://fonts.googleapis.com/css2?family=Playwrite+SK:wght@100..400&display=swap");
+
+.menu-res {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: url(../../../public/Image_menu_res.png);
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 1000px;
+}
+
+.menu-res-nav {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1500px;
+  width: 1150px;
+  margin-top: 25px;
+}
+
+.menuBtn {
+  padding: 8px 20px;
+  color: black;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 20px;
+  font-size: 20px;
+}
+
+.menuBtn:hover {
+  color: #fff;
+  background: #222;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.menu-res-title {
+  font-size: 50px;
+  margin: 0 15px 10px 15px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: bold;
+  color: orange;
+}
+
+.menu-res-item {
+  display: flex;
+  width: 1200px;
+  height: 520px;
+  margin: 20px 0;
+  overflow: hidden;
+  margin-bottom: 70px;
+}
+
+.menu-res-item-image img {
+  width: 600px;
+  height: 500px;
+  border-radius: 8px;
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.374);
+}
+
+.menu-res-item-content {
+  flex: 1;
+  padding: 0 30px 0 30px;
+}
+
+.menu-res h1 {
+  text-align: center;
+  font-size: 40px;
+  font-family: "Playwrite Slovensko";
+  margin: 0 0 40px 0;
+}
+
+.menu-res-item-content table {
+  width: 100%;
+  border-collapse: collapse;
+  border-top: 2px solid #ccc;
+  font-size: 25px;
+}
+
+.menu-res-item-content td {
+  padding: 5px;
+  padding-left: 40px;
+  margin-top: 0;
+}
+
+.menu-res-item-content td:nth-child(2) {
+  text-align: center;
+  width: 250px;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .menu-res-nav {
+    max-width: 90%;
+    width: 100%;
+  }
+
+  .menu-res-item {
+    flex-direction: column;
+    width: 90%;
+    height: auto;
+  }
+
+  .menu-res-item-image img {
+    width: 100%;
+    height: auto;
+  }
+
+  .menu-res-item-content {
+    padding: 20px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .menu-res-title {
+    font-size: 35px;
+  }
+
+  .menu-res h1 {
+    font-size: 30px;
+  }
+
+  .menuBtn {
+    font-size: 18px;
+  }
+
+  .menu-res-item-content table {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-res-title {
+    font-size: 25px;
+  }
+
+  .menu-res h1 {
+    font-size: 20px;
+  }
+
+  .menuBtn {
+    font-size: 16px;
+    padding: 6px 15px;
+  }
+
+  .menu-res-item-content table {
+    font-size: 18px;
+  }
+}

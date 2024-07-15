@@ -47,8 +47,8 @@ const reservationSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    default: "Đã đặt trước",
-    enum: ['Đã đặt trước', 'Đặt cọc thất bại', 'Đang hoạt động', 'Đã hủy'],
+    default: "Đang hoạt động",
+    enum: ['Chờ đặt cọc', 'Đã đặt trước', 'Đặt cọc thất bại', 'Đang hoạt động', 'Đã hủy'],
   },
   deposit: {
     type: Boolean,

@@ -1,10 +1,10 @@
 import { axiosInstanceAuth } from "./index";
 
-const createMenu = (data) => {
-    return axiosInstanceAuth.post('/menu/create-menu', data);
+const createMenu = (formData) => {
+    return axiosInstanceAuth.post('/menu/create-menu', formData);
 }
-const editMenu = (menuId, data) => {
-    return axiosInstanceAuth.put(`/menu/${menuId}`, data)
+const editMenu = (menuId, formData) => {
+    return axiosInstanceAuth.put(`/menu/${menuId}`, formData)
 }
 const deleteMenu = (menuId) => {
     return axiosInstanceAuth.delete(`/menu/${menuId}`)

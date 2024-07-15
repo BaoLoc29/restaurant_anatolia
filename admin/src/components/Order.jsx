@@ -37,12 +37,11 @@ const Orders = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
 
-  /* eslint-disable no-unused-vars */
   const [pageSize, setPageSize] = useState(6);
   const [pageIndex, setPageIndex] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalDoc, setTotalDoc] = useState(0);
-  /* eslint-enable no-unused-vars */
+
   const [form] = Form.useForm();
   const [showResult, setShowResult] = useState(false);
   const [errorMessage, setErrorMessage] = useState([]);
@@ -70,28 +69,28 @@ const Orders = () => {
       (item) => item && dayjs(item.date).isSame(value, "date")
     );
 
-    // Determine type based on date and time comparison
     const listData = ordersForDateFiltered.map((item) => {
-      let type = "";
+      let color = "";
       if (item.status === "Đã đặt trước") {
-        type = "success";
+        color = "lime";
       } else if (item.status === "Đang hoạt động") {
-        type = "processing";
+        color = "blue";
       } else if (item.status === "Đã hủy") {
-        type = "error";
-      } else if (item.status === "Thanh toán thất bại") {
-        type = "error";
+        color = "red";
+      } else if (item.status === "Chờ đặt cọc") {
+        color = "gray";
       }
       return {
         ...item,
-        type,
+        color,
       };
     });
+
     return (
       <ul className="events">
         {listData.map((item) => (
           <li key={item._id}>
-            <Badge status={item.type} text={`Bàn ${item.table}`} />
+            <Badge color={item.color} text={`Bàn ${item.table}`} />
           </li>
         ))}
       </ul>
@@ -156,6 +155,7 @@ const Orders = () => {
 
   useEffect(() => {
     if (modalDetailOrder) {
+      setPageIndex(1);
       getOrderDate();
     }
   }, [modalDetailOrder, selectedValue, getOrderDate]);
@@ -178,7 +178,7 @@ const Orders = () => {
         form.resetFields();
         setTimeout(() => {
           setShowResult(false);
-        }, 30000);
+        }, 10000);
         setErrorMessage("");
       } else {
         const errorMessage =
@@ -253,6 +253,16 @@ const Orders = () => {
     setSearchResults([]);
   };
 
+  const handlePaginationChange = (pageIndex, pageSize) => {
+    if (searchQuery.trim() === "") {
+      setPageSize(pageSize);
+      setPageIndex(pageIndex);
+    } else {
+      setPageSize(pageSize);
+      handleSearch();
+    }
+  };
+
   return (
     <div className="h-[54rem]">
       <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
@@ -301,6 +311,11 @@ const Orders = () => {
           orders={searchQuery.trim() !== "" ? searchResults : ordersForDate}
           searchQuery={searchQuery}
           handleEditReservation={handleEditReservation}
+          handlePaginationChange={handlePaginationChange}
+          pageIndex={pageIndex}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          totalDoc={totalDoc}
         />
       </div>
       <DrawerCreateOrder

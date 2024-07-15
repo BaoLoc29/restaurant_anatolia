@@ -36,6 +36,11 @@ const TableReservationSchema = new mongoose.Schema({
         },
         min: [0, "Số tiền đặt cọc không thể nhỏ hơn 0."]
     },
+    status: {
+        type: String,
+        required: true,
+        default: "Chưa thanh toán"
+    },
     dishes: [{
         dishName: {
             type: String,
@@ -52,6 +57,10 @@ const TableReservationSchema = new mongoose.Schema({
         totalPerDish: {
             type: Number,
             required: true
+        },
+        image: {
+            type: String,
+            required: true
         }
     }],
     totalAmount: {
@@ -60,16 +69,5 @@ const TableReservationSchema = new mongoose.Schema({
         default: 0
     }
 }, { timestamps: true });
-
-// Tính tổng tiền cho mỗi món
-TableReservationSchema.pre('save', function (next) {
-    let totalAmount = 0;
-    this.dishes.forEach(dish => {
-        dish.totalPerDish = dish.price * dish.quantity;
-        totalAmount += dish.totalPerDish;
-    });
-    this.totalAmount = totalAmount;
-    next();
-})
 
 export const TableReservation = mongoose.model("TableReservation", TableReservationSchema);

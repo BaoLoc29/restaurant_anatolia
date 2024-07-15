@@ -13,6 +13,7 @@ const ModalListOrderDate = ({
   searchResults,
   searchQuery,
   handleEditReservation,
+  handlePaginationChange,
 }) => {
   const [updatedStatus, setUpdatedStatus] = useState({});
 
@@ -116,6 +117,7 @@ const ModalListOrderDate = ({
       ),
     },
   ];
+  const hasChanges = () => Object.keys(updatedStatus).length > 0;
   return (
     <Modal
       title={
@@ -148,13 +150,16 @@ const ModalListOrderDate = ({
       />
       <div className="flex mt-4 justify-end space-x-2">
         <Pagination
-          defaultCurrent={1}
           current={pageIndex}
-          total={totalDoc}
           pageSize={pageSize}
-          showSizeChanger
+          total={totalDoc}
+          onChange={handlePaginationChange}
         />
-        <Button type="primary" onClick={handleUpdateStatus}>
+        <Button
+          type="primary"
+          disabled={!hasChanges()}
+          onClick={handleUpdateStatus}
+        >
           Cập nhật
         </Button>
       </div>

@@ -1,6 +1,8 @@
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
 import moment from 'moment';
+import { scheduleCancellation } from '../middlewares/cancellation.js';
+import { scheduleDepositUpdate } from '../middlewares/depositUpdate.js';
 import { Reservation } from '../models/reservation.js';
 import { TableReservation } from '../models/tableReservation.js';
 import Table from '../models/table.js';
@@ -108,7 +110,7 @@ const createCheckoutSession = async (req, res) => {
             guests,
             notes,
             table: availableTable.id_table,
-            status: "Đã đặt trước",
+            status: "Chờ đặt cọc",
             deposit: deposit || false,
             depositAmount: deposit ? 200000 : 0,
         });
@@ -125,6 +127,9 @@ const createCheckoutSession = async (req, res) => {
             depositAmount: savedReservation.depositAmount,
         });
         await newTableReservation.save();
+
+        await scheduleDepositUpdate(reservationDateTime, availableTable, savedReservation);
+        await scheduleCancellation(reservationDateTime, savedReservation);
 
         if (deposit) {
             const line_items = [{
@@ -163,35 +168,12 @@ const createCheckoutSession = async (req, res) => {
             console.log("Reservation saved successfully without deposit.");
             res.json({ success: true, message: 'Reservation created successfully' });
         }
-        // Lên lịch hủy đơn đặt sau 3 phút nếu không đổi trạng thái đơn đặt
-        schedule.scheduleJob(reservationDateTime.clone().add(3, 'minutes').toDate(), async function () {
-            const reservation = await Reservation.findById(savedReservation._id);
-            if (reservation && reservation.status === 'Đã đặt trước') {
-                reservation.status = 'Đã hủy';
-                await reservation.save();
-
-                const tableToUpdate = await Table.findOne({ id_table: reservation.table });
-                if (tableToUpdate) {
-                    tableToUpdate.status = 'Còn trống';
-                    await tableToUpdate.save();
-                }
-
-                console.log(`Đơn đặt chỗ ${savedReservation._id} đã bị hủy tự động.`);
-                
-                // Cập nhật trạng thái trong bảng phụ (TableReservation)
-                const tableReservation = await TableReservation.findOne({ reservationId: savedReservation._id });
-                if (tableReservation) {
-                    tableReservation.statusReservation = 'Đã hủy';
-                    await tableReservation.save();
-                    console.log(`Đã cập nhật trạng thái trong bảng phụ (TableReservation) cho đơn đặt chỗ ${savedReservation._id}.`);
-                }
-            }
-        });
     } catch (error) {
         console.error("Error during checkout session creation:", error);
         res.status(500).json({ success: false, message: 'Error creating reservation or session' });
     }
 };
+
 
 const handleStripeWebhook = async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -212,6 +194,8 @@ const handleStripeWebhook = async (req, res) => {
             await handlePaymentSuccess(event.data.object);
             break;
         case 'payment_intent.payment_failed':
+            await handlePaymentFailed(event.data.object);
+            break;
         case 'charge.failed':
             await handlePaymentFailed(event.data.object);
             break;
@@ -245,8 +229,8 @@ const handlePaymentSuccess = async (session) => {
     }
 };
 
-const handlePaymentFailed = async (paymentIntent) => {
-    const reservationId = paymentIntent.metadata.reservationId;
+const handlePaymentFailed = async (session) => {
+    const reservationId = session.metadata.reservationId;
 
     try {
         const reservation = await Reservation.findById(reservationId);
@@ -267,5 +251,6 @@ const handlePaymentFailed = async (paymentIntent) => {
         console.error("Error updating reservation after payment failure:", error.message);
     }
 };
+
 
 export { createCheckoutSession, handleStripeWebhook };

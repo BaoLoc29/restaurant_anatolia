@@ -36,16 +36,23 @@ export const orderFood = async (req, res) => {
                     dishName: menuDish.name,
                     price: menuDish.price,
                     quantity: dish.quantity,
-                    totalPerDish: menuDish.price * dish.quantity
+                    totalPerDish: menuDish.price * dish.quantity,
+                    image: menuDish.imageMenu
                 });
             }
         });
 
-        // Tính tổng tiền của đơn đặt hàng
+        // Cập nhật tổng tiền
         let totalAmount = 0;
         tableReservation.dishes.forEach(dish => {
             totalAmount += dish.totalPerDish;
         });
+
+        // Trừ đi số tiền đặt cọc
+        if (tableReservation.deposit) {
+            totalAmount -= tableReservation.depositAmount;
+        }
+
         tableReservation.totalAmount = totalAmount;
 
         await tableReservation.save();
@@ -62,7 +69,7 @@ export const getPagingOrder = async (req, res) => {
             .skip(query.pageSize * query.pageIndex - query.pageSize)
             .limit(query.pageSize).sort({ createdAt: "desc" })
 
-        const countOrderFood = await TableReservation.countDocuments()
+        const countOrderFood = await TableReservation.countDocuments({ statusReservation: "Đang hoạt động" })
         const totalPage = Math.ceil(countOrderFood / query.pageSize)
 
         const formattedOrderFood = orders.map(order => ({
@@ -97,5 +104,21 @@ export const searchOrder = async (req, res) => {
         return res.status(200).json({ success: true, tableReservations });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
+    }
+}
+export const getOrderById = async (req, res) => {
+    try {
+        const { reservationId } = req.params;
+
+        const tableReservation = await TableReservation.findOne({ reservationId });
+
+        if (!tableReservation) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng này!" });
+        }
+
+        return res.status(200).json({ success: true, tableReservation })
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
     }
 }

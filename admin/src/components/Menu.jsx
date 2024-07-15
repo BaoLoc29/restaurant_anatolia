@@ -9,6 +9,7 @@ import {
   Select,
   Input,
   Tag,
+  Image,
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { FaEdit } from "react-icons/fa";
@@ -56,6 +57,13 @@ const MenuComponent = () => {
   ];
 
   const columns = [
+    {
+      title: "Hình ảnh",
+      dataIndex: "imageMenu",
+      key: "imageMenu",
+      align: "center",
+      render: (row) => <Image width={120} src={row} />,
+    },
     {
       title: "Mã món ăn",
       dataIndex: "code",
@@ -197,16 +205,24 @@ const MenuComponent = () => {
     getMenus();
   }, [getMenus]);
 
-  const handleCreateMenu = async (value) => {
+  const handleCreateMenu = async (values, file) => {
     try {
       setLoading(true);
-      const { confirm, ...dataToSend } = value;
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("price", values.price);
+      formData.append("classify", values.classify);
+      formData.append("category", values.category);
+      formData.append("description", values.description);
+      formData.append("status", values.status);
+      formData.append("image", file);
+
       if (!selectedMenu) {
-        const result = await createMenu(dataToSend);
+        const result = await createMenu(formData);
         setMenus([result.data.result, ...menus]);
         toast.success("Thêm món mới vào menu thành công!");
       } else {
-        const result = await editMenu(selectedMenu, value);
+        const result = await editMenu(selectedMenu, formData);
         setMenus(
           menus.map((menu) => {
             if (menu._id === selectedMenu) {

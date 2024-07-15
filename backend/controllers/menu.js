@@ -1,6 +1,8 @@
 import Menu from "../models/menu.js";
 import joi from "joi"
 import moment from 'moment';
+import handleUpload from '../utils/cloundinary.js';
+
 const formatCreatedAt = (date) => {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -60,6 +62,14 @@ export const createMenu = async (req, res) => {
             newIdMenu = `${prefix}001`;
         }
 
+        let imageUrl = "";
+        if (req.file) {
+            const b64 = Buffer.from(req.file.buffer).toString("base64");
+            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+            const result = await handleUpload(dataURI);
+            imageUrl = result.url;
+        }
+
         const result = await Menu.create({
             code: newIdMenu,
             name,
@@ -67,7 +77,8 @@ export const createMenu = async (req, res) => {
             category,
             description,
             unit,
-            price
+            price,
+            imageMenu: imageUrl
         });
 
         return res.status(200).json({
@@ -154,6 +165,13 @@ export const editMenu = async (req, res) => {
         updateMenu.unit = unit;
         updateMenu.price = price;
         updateMenu.status = status
+
+        if (req.file) {
+            const b64 = Buffer.from(req.file.buffer).toString("base64");
+            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+            const uploadResult = await handleUpload(dataURI);
+            updateMenu.imageMenu = uploadResult.url;
+        }
 
         await updateMenu.save();
 
@@ -278,6 +296,37 @@ export const getAllMenu = async (req, res) => {
         const categories = await Menu.distinct('category');
 
         return res.status(200).json({ menus, categories, totalMenu, recentMenu });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+export const getMenuByCategory = async (req, res) => {
+    try {
+        const { category } = req.body;
+        const menu = await Menu.findOne({ category });
+        if (!menu) {
+            return res.status(404).json({ message: "Không tìm thấy món ăn!" });
+        }
+        return res.status(200).json({ menu });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+};
+export const getAll = async (req, res) => {
+    try {
+        const { category } = req.query;
+        let query = {};
+
+        if (category) {
+            query.category = category;
+        }
+        const menuslist = await Menu.find().sort({ createdAt: "desc" });
+
+        if (!menuslist || menuslist.length === 0) {
+            return res.status(404).json({ message: "Không có món ăn nào được tìm thấy!" });
+        }
+
+        return res.status(200).json({ menuslist });
     } catch (error) {
         return res.status(500).json({ message: error.message });
     }

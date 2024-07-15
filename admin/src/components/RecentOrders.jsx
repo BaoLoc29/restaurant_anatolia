@@ -8,6 +8,7 @@ export default function RecentOrders() {
 
   const handleGetReservation = useCallback(async () => {
     try {
+      setLoading(true);
       const result = await getReservation();
       setReservations(result.data.reservations.slice(0, 5));
     } catch (error) {

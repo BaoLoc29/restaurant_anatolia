@@ -109,10 +109,10 @@ const TableComponent = () => {
       align: "center",
       render: (status) => {
         const colorMap = {
-          "Còn trống": "red",
+          "Còn trống": "green",
           "Đang sử dụng": "blue",
-          "Đã đặt cọc": "orange",
-          "Chưa đặt cọc": "green",
+          "Đã đặt cọc": "",
+          "Chưa đặt cọc": "red",
         };
         return <Tag color={colorMap[status]}>{status}</Tag>;
       },

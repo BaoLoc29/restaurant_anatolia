@@ -8,15 +8,17 @@ import {
   Table,
   Alert,
   Empty,
+  Image,
 } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
-import { getPagingMenu, getAllMenu } from "../services/menu.js";
+import { getPagingMenu, getAllMenu, searchMenu } from "../services/menu.js";
+import { createOrderFood, getDetailOrderFood } from "../services/orderFood.js";
 import { IoIosPrint } from "react-icons/io";
 import { MdDelete, MdLocalPrintshop } from "react-icons/md";
 import { TbBrandAirtable } from "react-icons/tb";
 import ModalGetReservation from "../components/ModalGetReservation/index.jsx";
 import QuantityInput from "./QuantityInput/index.jsx";
-import { searchMenu } from "../services/menu.js";
+import toast from "react-hot-toast";
 
 const OrderDish = () => {
   const [form] = Form.useForm();
@@ -32,7 +34,8 @@ const OrderDish = () => {
   const [options, setOptions] = useState([]);
   const [selectedTable, setSelectedTable] = useState(null);
   const [totalQuantity, setTotalQuantity] = useState(0);
-  const [dataSource, setDataSource] = useState([]);
+  const [depositAmount, setDepositAmount] = useState(0);
+  const [orderData, setOrderData] = useState({ dishes: [], depositAmount: 0 });
   const { Option } = AutoComplete;
 
   const getMenus = useCallback(async () => {
@@ -65,22 +68,23 @@ const OrderDish = () => {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     getMenus();
     handleGetAllMenu();
   }, [getMenus, handleGetAllMenu]);
 
   useEffect(() => {
-    const total = dataSource.reduce((sum, item) => sum + item.quantity, 0);
+    const total = orderData.dishes.reduce(
+      (sum, item) => sum + item.quantity,
+      0
+    );
     setTotalQuantity(total);
-  }, [dataSource]);
+  }, [orderData]);
 
   const handlePaginationChange = (pageIndex, pageSize) => {
     setPageSize(pageSize);
     setPageIndex(pageIndex);
   };
-
   const handleCategoryClick = (category) => {
     if (activeCategory === category) {
       setActiveCategory(null);
@@ -91,14 +95,12 @@ const OrderDish = () => {
       setPageIndex(1);
     }
   };
-
   const truncatedName = (name, maxLength) => {
     if (name.length > maxLength) {
       return `${name.slice(0, maxLength)}...`;
     }
     return name;
   };
-
   const handleSearch = async (keyword) => {
     try {
       const result = await searchMenu(keyword, "name");
@@ -107,59 +109,144 @@ const OrderDish = () => {
       console.log(error);
     }
   };
-
   const handleCloseModal = () => {
     form.resetFields();
     setModalGetReservation(false);
-    setSelectedTable(null);
   };
-
-  const handleSelectTable = (tableId) => {
-    setSelectedTable(tableId);
+  const handleSelectTable = (reservationId) => {
+    setSelectedTable(reservationId);
     setModalGetReservation(false);
   };
 
-  const handleQuantityChange = (key, newQuantity) => {
-    const newData = dataSource.map((item) => {
-      if (item.key === key) {
-        return {
-          ...item,
-          quantity: newQuantity,
-          totalPrice: item.price * newQuantity,
-        };
-      }
-      return item;
-    });
-    setDataSource(newData);
-  };
-
-  const addDishToOrder = (code, dishName, price) => {
-    const existingDishIndex = dataSource.findIndex(
-      (dish) => dish.code === code
+  // const handleQuantityChange = (key, newQuantity) => {
+  //   const newOrderData = orderData.dishes.map((dish) => {
+  //     if (dish.key === key) {
+  //       return {
+  //         ...dish,
+  //         quantity: newQuantity,
+  //         totalPrice: dish.price * newQuantity,
+  //       };
+  //     }
+  //     return dish;
+  //   });
+  //   setOrderData({
+  //     ...orderData,
+  //     dishes: newOrderData,
+  //   });
+  // };
+  const handleQuantityChange = (dishId, newQuantity) => {
+    const updatedDishes = orderData.dishes.map((dish) =>
+      dish._id === dishId ? { ...dish, quantity: newQuantity } : dish
     );
 
-    if (existingDishIndex !== -1) {
-      const newData = [...dataSource];
-      newData[existingDishIndex].quantity += 1;
-      setDataSource(newData);
-    } else {
-      const newDish = {
-        key: dataSource.length + 1,
-        code,
-        dishName,
-        price,
-        quantity: 1, // Default quantity
-      };
-      setDataSource([...dataSource, newDish]);
-    }
+    setOrderData((prevData) => ({
+      ...prevData,
+      dishes: updatedDishes,
+    }));
+  };
+
+  const addDishToOrder = (code, dishName, price, image) => {
+    setOrderData((prevOrderData) => {
+      // Tìm xem món ăn đã tồn tại trong mảng dishes chưa
+      const existingDishIndex = prevOrderData.dishes.findIndex(
+        (dish) => dish.code === code
+      );
+
+      if (existingDishIndex !== -1) {
+        // Nếu món ăn đã tồn tại, cập nhật số lượng
+        const updatedDishes = prevOrderData.dishes.map((dish, index) => {
+          if (index === existingDishIndex) {
+            return { ...dish, quantity: dish.quantity + 1 };
+          }
+          return dish;
+        });
+        return { ...prevOrderData, dishes: updatedDishes };
+      } else {
+        // Nếu món ăn chưa tồn tại, thêm món ăn mới
+        const newDish = {
+          key: prevOrderData.dishes.length + 1,
+          code,
+          dishName,
+          price,
+          quantity: 1,
+          image,
+        };
+        return { ...prevOrderData, dishes: [...prevOrderData.dishes, newDish] };
+      }
+    });
   };
 
   const handleDeleteDish = (key) => {
-    const newData = dataSource.filter((item) => item.key !== key);
-    setDataSource(newData);
+    const newOrderData = orderData.dishes.filter((item) => item.key !== key);
+    setOrderData({
+      ...orderData,
+      dishes: newOrderData,
+    });
   };
 
+  const handleCreateOrder = async () => {
+    try {
+      if (orderData.dishes.length === 0) {
+        throw new Error("Không có món ăn nào được chọn.");
+      }
+
+      const data = {
+        dishes: orderData.dishes.map((dish) => ({
+          code: dish.code,
+          quantity: dish.quantity,
+        })),
+      };
+
+      const response = await createOrderFood(selectedTable, data);
+
+      if (response.data.success) {
+        toast.success("Đặt món thành công!");
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      console.error("Lỗi khi đặt hàng:", error.message);
+    }
+  };
+
+  const getOrderById = useCallback(async () => {
+    try {
+      setLoading(true);
+      const result = await getDetailOrderFood(selectedTable);
+      const orderData = result.data.tableReservation;
+      form.setFieldsValue({
+        reservationId: orderData.reservationId,
+        tableId: orderData.tableId,
+        depositAmount: orderData.depositAmount,
+        totalAmount: orderData.totalAmount,
+        image: orderData.image,
+        status: orderData.status,
+        dishes: orderData.dishes.map((dish) => ({
+          code: dish.code,
+          quantity: dish.quantity,
+        })),
+      });
+      setOrderData(orderData);
+      setDepositAmount(orderData.depositAmount);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedTable, form]);
+
+  useEffect(() => {
+    if (selectedTable) getOrderById();
+  }, [selectedTable, getOrderById]);
+
   const columns = [
+    {
+      title: "Hình ảnh",
+      dataIndex: "image",
+      key: "image",
+      align: "center",
+      render: (image) => <Image width={60} height={60} src={image} />,
+    },
     {
       title: "Tên món",
       dataIndex: "dishName",
@@ -179,11 +266,11 @@ const OrderDish = () => {
       dataIndex: "quantity",
       key: "quantity",
       align: "center",
-      render: (text, record) => (
+      render: (text, dish) => (
         <QuantityInput
-          value={record.quantity}
+          value={dish.quantity}
           onChange={(newQuantity) =>
-            handleQuantityChange(record.key, newQuantity)
+            handleQuantityChange(dish._id, newQuantity)
           }
         />
       ),
@@ -213,7 +300,6 @@ const OrderDish = () => {
       },
     },
   ];
-
   return (
     <div className="flex justify-between h-[37rem]">
       {/* Tìm món */}
@@ -230,7 +316,12 @@ const OrderDish = () => {
               <div
                 className="flex items-center"
                 onClick={() =>
-                  addDishToOrder(option.code, option.name, option.price)
+                  addDishToOrder(
+                    option.code,
+                    option.name,
+                    option.price,
+                    option.imageMenu
+                  )
                 }
               >
                 <img
@@ -250,9 +341,7 @@ const OrderDish = () => {
         <ul className="mt-3">
           <li
             className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
-              activeCategory === null
-                ? "bg-gray-300 border-gray-700"
-                : "hover:bg-gray-300 "
+              activeCategory === null ? "bg-gray-300" : "hover:bg-gray-300"
             }`}
             onClick={() => handleCategoryClick(null)}
           >
@@ -263,7 +352,7 @@ const OrderDish = () => {
               key={category}
               className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
                 activeCategory === category
-                  ? "bg-gray-300 hover:bg-gray-400"
+                  ? "bg-gray-300"
                   : "hover:bg-gray-300"
               }`}
               onClick={() => handleCategoryClick(category)}
@@ -274,8 +363,8 @@ const OrderDish = () => {
         </ul>
       </div>
       {/* Chọn món */}
-      <div className="w-[40rem] bg-white p-4 ">
-        <div className="flex flex-wrap gap-[1rem] justify-start">
+      <div className="w-[35rem] bg-white p-4">
+        <div className="flex flex-wrap gap-[1rem] justify-start ">
           {loading ? (
             <Spin
               size="large"
@@ -287,7 +376,7 @@ const OrderDish = () => {
                 key={menu._id}
                 hoverable
                 style={{
-                  width: 192,
+                  width: 165,
                 }}
                 bodyStyle={{ padding: 7 }}
                 cover={
@@ -300,19 +389,26 @@ const OrderDish = () => {
                     }}
                   />
                 }
-                onClick={() => addDishToOrder(menu.code, menu.name, menu.price)}
+                onClick={() =>
+                  addDishToOrder(
+                    menu.code,
+                    menu.name,
+                    menu.price,
+                    menu.imageMenu
+                  )
+                }
               >
-                <h1 className="m-2 font-bold text-base text-center">
-                  {truncatedName(menu.name, 20)}
+                <h1 className="my-2 font-bold text-base text-center">
+                  {truncatedName(menu.name, 15)}
                 </h1>
-                <p className="m-2 text-base text-center">
+                <p className="my-2 text-base text-center">
                   {menu.price.toLocaleString()} đ
                 </p>
               </Card>
             ))
           ) : (
             <div className="flex items-center justify-center w-full h-[33rem] bg-gray-200">
-              <Empty />
+              <Empty description="Không có dữ liệu" />
             </div>
           )}
         </div>
@@ -329,14 +425,14 @@ const OrderDish = () => {
         />
       </div>
       {/* Đặt món */}
-      <div className="w-[32rem] h-[37rem] bg-white p-4">
+      <div className="w-[37rem] h-[37rem] bg-white p-4">
         <div className="flex mb-2 justify-between w-full">
           <Alert
             message={
               <span>
                 Bạn đã chọn bàn có mã là{" "}
                 <span className="text-red-500 font-bold">
-                  {selectedTable ? `${selectedTable}` : "----"}
+                  {orderData?.tableId || "___"}
                 </span>
               </span>
             }
@@ -364,19 +460,31 @@ const OrderDish = () => {
         {/* Đặt món */}
         <div className="h-[32rem] flex flex-col justify-between">
           <div className="h-[200rem] overflow-y-auto mt-2 mb-0">
-            <Table
-              columns={columns}
-              dataSource={dataSource}
-              pagination={false}
-              className="min-w-full"
-            />
+            {orderData.dishes.length > 0 ? (
+              <Table
+                columns={columns}
+                dataSource={orderData.dishes}
+                pagination={false}
+                className="min-w-full"
+                rowKey={(record) => record.key}
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-[19rem] bg-gray-100">
+                <Empty
+                  description={
+                    <span className="font-bold text-gray-400">
+                      Chưa có món ăn nào được thêm
+                    </span>
+                  }
+                />
+              </div>
+            )}
           </div>
-
           <div className="h-[10rem] mb-3">
             <div className="flex justify-between mt-4">
               <h1>Tạm tính ({totalQuantity} món)</h1>
               <p className="font-bold">
-                {dataSource
+                {orderData.dishes
                   .reduce((sum, item) => sum + item.price * item.quantity, 0)
                   .toLocaleString()}{" "}
                 đ
@@ -385,7 +493,9 @@ const OrderDish = () => {
 
             <div className="flex justify-between mt-3">
               <h1>Đã đặt cọc</h1>
-              <p className="font-bold">0 đ</p>
+              <p className="font-bold">
+                {orderData.depositAmount.toLocaleString() || "0"} đ
+              </p>
             </div>
           </div>
 
@@ -411,16 +521,24 @@ const OrderDish = () => {
             <div className="flex flex-col items-end justify-end text-right">
               <h1 className="font-bold">Thành Tiền</h1>
               <p className="text-green-600 font-bold mt-1">
-                {dataSource
-                  .reduce((sum, item) => sum + item.price * item.quantity, 0)
-                  .toLocaleString()}{" "}
+                {(
+                  orderData.dishes.reduce(
+                    (sum, item) => sum + item.price * item.quantity,
+                    0
+                  ) - depositAmount
+                ).toLocaleString()}{" "}
                 đ
               </p>
             </div>
           </div>
 
           <div className="flex gap-2 w-full items-center h-12 mt-auto">
-            <Button type="primary" className="text-lg h-[3rem] w-full">
+            <Button
+              loading={loading}
+              type="primary"
+              className="text-lg h-[3rem] w-full"
+              onClick={handleCreateOrder}
+            >
               Thanh Toán
             </Button>
           </div>
