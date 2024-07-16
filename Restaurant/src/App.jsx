@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import Home from "./Pages/Home";
 import NotFound from "./Pages/NotFound";
-import Success from "./Pages/Success";
+import Success from "./Pages/Success/Success";
 import Confirm from "./Pages/Confrim/Confrim";
 import PaymentCancel from "./Pages/PaymentCancel";
 import Menu_res from "./Pages/Menu_res/index.jsx";

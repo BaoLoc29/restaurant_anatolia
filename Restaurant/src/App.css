@@ -1082,9 +1082,9 @@ footer .container .banner .right {
   max-width: 1500px;
   text-align: center;
 }
-.notFound .container img {
+/* .notFound .container img {
   margin-bottom: 2rem;
-}
+} */
 .notFound .container h1 {
   font-size: 2.75rem;
   font-weight: 300;
@@ -1103,7 +1103,7 @@ footer .container .banner .right {
   border-radius: 30px;
   display: flex;
   width: fit-content;
-  margin: 0 auto;
+  margin: 10px auto 0;
   align-items: center;
   justify-content: center;
   text-decoration: none;

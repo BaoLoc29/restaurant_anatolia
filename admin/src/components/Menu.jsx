@@ -209,6 +209,7 @@ const MenuComponent = () => {
     try {
       setLoading(true);
       const formData = new FormData();
+      formData.append("code", values.code);
       formData.append("name", values.name);
       formData.append("price", values.price);
       formData.append("classify", values.classify);

@@ -58,7 +58,7 @@ const TableReservationSchema = new mongoose.Schema({
             type: Number,
             required: true
         },
-        image: {
+        code: {
             type: String,
             required: true
         }

@@ -10,9 +10,12 @@ const getDetailOrderFood = (reservationId) => {
 const createOrderFood = (reservationId, data) => {
     return axiosInstanceAuth.post(`/order/order-food/${reservationId}`, data)
 }
-
+const getStatistics = () => {
+    return axiosInstanceAuth.get('/order/revenue-statistics')
+}
 export {
     getPagingOrderFood,
     getDetailOrderFood,
-    createOrderFood
+    createOrderFood,
+    getStatistics
 }
