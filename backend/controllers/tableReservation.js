@@ -4,7 +4,6 @@ import Menu from '../models/menu.js';
 const formatCreatedAt = (date) => {
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
-
 export const orderFood = async (req, res) => {
     try {
         const { reservationId } = req.params;
@@ -28,17 +27,26 @@ export const orderFood = async (req, res) => {
             return res.status(404).json({ success: false, message: "Không tìm thấy món ăn nào." });
         }
 
-        // Thêm từng món vào đơn đặt hàng và tính tổng tiền
+        // Cập nhật hoặc thêm món ăn vào đơn đặt hàng và tính tổng tiền
         dishes.forEach(dish => {
             const menuDish = menuDishes.find(m => m.code === dish.code);
             if (menuDish) {
-                tableReservation.dishes.push({
-                    dishName: menuDish.name,
-                    price: menuDish.price,
-                    quantity: dish.quantity,
-                    totalPerDish: menuDish.price * dish.quantity,
-                    image: menuDish.imageMenu
-                });
+                // Kiểm tra xem món ăn đã có trong danh sách chưa
+                const existingDish = tableReservation.dishes.find(d => d.code === dish.code);
+                if (existingDish) {
+                    // Nếu đã có, cập nhật số lượng
+                    existingDish.quantity += dish.quantity;
+                    existingDish.totalPerDish = menuDish.price * existingDish.quantity;
+                } else {
+                    // Nếu chưa có, thêm mới
+                    tableReservation.dishes.push({
+                        dishName: menuDish.name,
+                        price: menuDish.price,
+                        quantity: dish.quantity,
+                        totalPerDish: menuDish.price * dish.quantity,
+                        code: menuDish.code
+                    });
+                }
             }
         });
 
@@ -57,7 +65,7 @@ export const orderFood = async (req, res) => {
 
         await tableReservation.save();
 
-        return res.status(200).json({ success: true, message: "Đã thêm các món vào đơn đặt hàng và tính tổng tiền thành công.", tableReservation });
+        return res.status(200).json({ success: true, message: "Đã cập nhật số lượng món vào đơn đặt hàng và tính tổng tiền thành công.", tableReservation });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -122,3 +130,50 @@ export const getOrderById = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message })
     }
 }
+export const statistics = async (req, res) => {
+    try {
+        const yearToQuery = 2024;
+        const totalRevenueByYear = await TableReservation.aggregate([
+            {
+                $match: {
+                    status: "Chưa thanh toán",
+                    reservationDate: {
+                        $gte: new Date(yearToQuery, 0, 1), // Từ ngày 1 tháng 1 năm được chỉ định
+                        $lt: new Date(yearToQuery + 1, 0, 1) // Đến ngày 1 tháng 1 năm sau
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: { $month: "$reservationDate" }, // Nhóm theo tháng
+                    total: { $sum: "$totalAmount" } // Tính tổng doanh thu từ trường totalAmount
+                }
+            },
+            {
+                $sort: { _id: 1 } // Sắp xếp kết quả theo tháng tăng dần
+            }
+        ]);
+
+        // Tạo mảng chứa tất cả các tháng từ 1 đến 12 với giá trị mặc định là 0
+        const allMonths = Array.from({ length: 12 }, (v, i) => ({
+            month: i + 1,
+            2024: 0
+        }));
+
+        // Mảng chứa các từ viết tắt của tháng trong tiếng Anh
+        const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+        // Kết hợp kết quả từ aggregate với mảng allMonths và đổi tháng thành từ viết tắt
+        const result = allMonths.map(monthObj => {
+            const monthData = totalRevenueByYear.find(data => data._id === monthObj.month);
+            const monthName = monthAbbreviations[monthObj.month - 1];
+            return monthData ? { month: monthName, 2024: monthData.total } : { month: monthName, 2024: 0 };
+        });
+
+        // Trả về kết quả trong JSON response
+        return res.status(200).json({ success: true, totalRevenueByYear: result });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+

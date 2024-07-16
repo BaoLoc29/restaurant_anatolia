@@ -12,7 +12,6 @@ const synonymKeywords = {
   "Cạnh cửa sổ": ["gần cửa sổ", "sát cửa sổ", "view đẹp"],
   "Ngoài trời": ["cảnh đẹp", "thoáng mát", "ngắm cảnh", "view đẹp"],
 };
-
 const findMatchingKeywords = (notes) => {
   let matchingKeywords = [];
   const normalizedNotes = notes.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "");
@@ -24,7 +23,6 @@ const findMatchingKeywords = (notes) => {
   }
   return matchingKeywords;
 };
-
 const checkReservationTime = (date, time) => {
   const reservationDateTime = moment(`${date}T${time}`);
   const now = moment();
@@ -42,7 +40,6 @@ const checkReservationTime = (date, time) => {
   }
   return reservationDateTime;
 };
-
 const getTableCapacity = (guests) => {
   if (guests >= 1 && guests <= 2) return 2;
   if (guests >= 3 && guests <= 4) return 4;
@@ -50,7 +47,6 @@ const getTableCapacity = (guests) => {
   if (guests >= 9 && guests <= 12) return 12;
   throw new Error('Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để biết thêm chi tiết!');
 };
-
 const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => {
   let tables = [];
   if (notes) {
@@ -265,6 +261,37 @@ export const getPagingReservation = async (req, res) => {
     return res.status(200).json({ reservations, totalPage, count: countReservation });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+export const getReservationDetails = async (req, res) => {
+  const reservationId = req.params.id;
+
+  try {
+    const reservation = await Reservation.findById(reservationId);
+    if (!reservation) {
+      return res.status(404).json({ success: false, message: 'Reservation not found' });
+    }
+
+    const table = await Table.findOne({ id_table: reservation.table });
+    const holdTime = reservation.deposit ? 30 : 15;
+
+    const reservationDetails = {
+      table: reservation.table,
+      time: reservation.time,
+      date: reservation.date,
+      holdTime,
+      status: reservation.status,
+      name: reservation.name,
+      guests: reservation.guests,
+      email: reservation.email,
+      phone: reservation.phone,
+      notes: reservation.notes,
+      tableDetails: table ? table.details : "Unknown",
+    };
+
+    res.json({ success: true, reservationDetails });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error fetching reservation details' });
   }
 };
 

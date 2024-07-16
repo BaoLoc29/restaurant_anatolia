@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import React, { useCallback, useEffect, useState } from "react";
 import { getAllMenu } from "../services/menu.js";
-import { Empty } from "antd";
+import { Empty, Image, Skeleton } from "antd";
 
 function PopularProducts() {
   const [loading, setLoading] = useState(false);
@@ -24,28 +24,34 @@ function PopularProducts() {
   }, [handleGetAllMenu]);
 
   return (
-    <div
-      loading={loading}
-      className="bg-white p-4 rounded-sm border border-gray-200 w-[20rem]"
-    >
+    <div className="bg-white p-4 rounded-sm border border-gray-200 w-[20rem]">
       <strong className="text-gray-700 font-medium">Danh sách món mới</strong>
-      {menus.length === 0 ? (
-        <Empty className="mt-[3rem]" description="Không có món nào" />
+
+      {loading ? (
+        <div className="mt-3">
+          <Skeleton avatar active paragraph={{ rows: 1 }} />
+          <Skeleton avatar active paragraph={{ rows: 1 }} />
+          <Skeleton avatar active paragraph={{ rows: 1 }} />
+        </div>
+      ) : menus.length === 0 ? (
+        <Empty className="mt-3" description="Không có món nào" />
       ) : (
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-3 flex flex-col gap-3">
           {menus.map((menu) => (
             <ul key={menu._id} className="flex items-start hover:no-underline">
               <li className="w-11 h-11 min-w-[2.5rem] bg-gray-200 rounded-sm">
-                <img
-                  className="w-full h-full object-cover rounded-sm"
+                <Image
+                  className="object-cover"
+                  height={43}
+                  width={43}
                   src={menu.imageMenu}
                   alt={menu.name}
                 />
               </li>
-              <div className="ml-4 flex-1">
+              <div className="ml-3 flex-1">
                 <p className="text-sm text-gray-800 font-bold">
-                  {menu.name.length > 19
-                    ? `${menu.name.substring(0, 19)}...`
+                  {menu.name.length > 20
+                    ? `${menu.name.substring(0, 20)}...`
                     : menu.name}
                 </p>
                 <span

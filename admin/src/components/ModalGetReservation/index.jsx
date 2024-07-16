@@ -1,8 +1,6 @@
 import { Empty, Modal, Pagination } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
-import {
-  getPagingOrderFood,
-} from "../../services/orderFood.js";
+import { getPagingOrderFood } from "../../services/orderFood.js";
 
 const ModalGetReservation = ({
   title,
@@ -68,10 +66,10 @@ const ModalGetReservation = ({
                     checked={selectedTable === orders?.tableId}
                   />
                   <div
-                    className={`w-[9rem] border rounded-lg p-4 cursor-pointer hover:shadow-md ${orders.dishes && orders.dishes.length > 1 ? "bg-blue-300" : "bg-gray-100"}`}
+                    className={`w-[9rem] border rounded-lg p-4 cursor-pointer hover:shadow-md ${orders.dishes && orders.dishes.length > 0 ? "bg-blue-300" : "bg-gray-100"}`}
                   >
                     <div className="font-bold mb-2">
-                      {orders.dishes && orders.dishes.length > 1 ? (
+                      {orders.dishes && orders.dishes.length > 0 ? (
                         <span>{orders.status}</span>
                       ) : (
                         <span>Chưa chọn món</span>

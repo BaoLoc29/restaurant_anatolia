@@ -8,7 +8,8 @@ import {
   Table,
   Alert,
   Empty,
-  Image,
+  // Image,
+  notification,
 } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import { getPagingMenu, getAllMenu, searchMenu } from "../services/menu.js";
@@ -118,22 +119,6 @@ const OrderDish = () => {
     setModalGetReservation(false);
   };
 
-  // const handleQuantityChange = (key, newQuantity) => {
-  //   const newOrderData = orderData.dishes.map((dish) => {
-  //     if (dish.key === key) {
-  //       return {
-  //         ...dish,
-  //         quantity: newQuantity,
-  //         totalPrice: dish.price * newQuantity,
-  //       };
-  //     }
-  //     return dish;
-  //   });
-  //   setOrderData({
-  //     ...orderData,
-  //     dishes: newOrderData,
-  //   });
-  // };
   const handleQuantityChange = (dishId, newQuantity) => {
     const updatedDishes = orderData.dishes.map((dish) =>
       dish._id === dishId ? { ...dish, quantity: newQuantity } : dish
@@ -146,34 +131,50 @@ const OrderDish = () => {
   };
 
   const addDishToOrder = (code, dishName, price, image) => {
-    setOrderData((prevOrderData) => {
-      // Tìm xem món ăn đã tồn tại trong mảng dishes chưa
-      const existingDishIndex = prevOrderData.dishes.findIndex(
-        (dish) => dish.code === code
-      );
+    if (selectedTable) {
+      setOrderData((prevOrderData) => {
+        const existingDishIndex = prevOrderData.dishes.findIndex(
+          (dish) => dish.code === code
+        );
 
-      if (existingDishIndex !== -1) {
-        // Nếu món ăn đã tồn tại, cập nhật số lượng
-        const updatedDishes = prevOrderData.dishes.map((dish, index) => {
-          if (index === existingDishIndex) {
-            return { ...dish, quantity: dish.quantity + 1 };
-          }
-          return dish;
-        });
-        return { ...prevOrderData, dishes: updatedDishes };
-      } else {
-        // Nếu món ăn chưa tồn tại, thêm món ăn mới
-        const newDish = {
-          key: prevOrderData.dishes.length + 1,
-          code,
-          dishName,
-          price,
-          quantity: 1,
-          image,
-        };
-        return { ...prevOrderData, dishes: [...prevOrderData.dishes, newDish] };
-      }
-    });
+        if (existingDishIndex !== -1) {
+          const updatedDishes = prevOrderData.dishes.map((dish, index) => {
+            if (index === existingDishIndex) {
+              return { ...dish, quantity: dish.quantity + 1 };
+            }
+            return dish;
+          });
+          notification.success({
+            message: <span className="font-bold">Thêm món ăn</span>,
+            description: `Đã thêm món "${dishName}" vào đơn hàng.`,
+          });
+          return { ...prevOrderData, dishes: updatedDishes };
+        } else {
+          const newDish = {
+            key: prevOrderData.dishes.length + 1,
+            code,
+            dishName,
+            price,
+            quantity: 1,
+            image,
+          };
+          notification.success({
+            message: <span className="font-bold">Thêm món ăn</span>,
+            description: `Đã thêm món "${dishName}" vào đơn hàng.`,
+          });
+          return {
+            ...prevOrderData,
+            dishes: [newDish, ...prevOrderData.dishes],
+          };
+        }
+      });
+    } else {
+      notification.error({
+        message: <span className="font-bold">Chọn bàn</span>,
+        description: "Vui lòng chọn bàn trước khi thêm món ăn.",
+      });
+      setModalGetReservation(true);
+    }
   };
 
   const handleDeleteDish = (key) => {
@@ -201,6 +202,7 @@ const OrderDish = () => {
 
       if (response.data.success) {
         toast.success("Đặt món thành công!");
+        window.location.reload();
       } else {
         toast.error(response.data.message);
       }
@@ -219,7 +221,6 @@ const OrderDish = () => {
         tableId: orderData.tableId,
         depositAmount: orderData.depositAmount,
         totalAmount: orderData.totalAmount,
-        image: orderData.image,
         status: orderData.status,
         dishes: orderData.dishes.map((dish) => ({
           code: dish.code,
@@ -241,11 +242,11 @@ const OrderDish = () => {
 
   const columns = [
     {
-      title: "Hình ảnh",
-      dataIndex: "image",
-      key: "image",
+      title: "STT",
+      dataIndex: "key",
+      key: "key",
       align: "center",
-      render: (image) => <Image width={60} height={60} src={image} />,
+      render: (text, record, index) => <div>{index + 1}</div>,
     },
     {
       title: "Tên món",
