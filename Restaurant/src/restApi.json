@@ -18,7 +18,7 @@
           "id": 3,
           "image": "./fast_delivery.svg",
           "title": "FAST DELIVERY",
-          "description": "Hỗ trợ giao hàng nhanh đến bất ngờ cùng Fast Food."
+          "description": "Thực phẩm tươi sống luôn được nhà hàng chúng tôi đích thân lựa chọn từ nhiều vùng."
         }
       ],
       "dishes": [
@@ -77,27 +77,21 @@
       "team": [
         {
           "id": 1,
-          "image": "../public/loc.png",
+          "image": "../dist/loc.png",
           "name": "Trần Bảo Lộc",
           "designation": "Founder & Head Chef"
         },
         {
           "id": 2,
-          "image": "../public/Huy.jpg",
+          "image": "../dist/Huy.jpg",
           "name": "Vũ Lê Huy",
           "designation": "Sous Chef"
         },
         {
           "id": 3,
-          "image": "../public/an.jpg",
+          "image": "../dist/an.jpg",
           "name": "Phan Thiên Ân",
           "designation": "Fast Food Chef"
-        },
-        {
-          "id": 4,
-          "image": "./team_member_4.png",
-          "name": "ALEX COAL",
-          "designation": "Senior Chef"
         }
       ],
       "testimonials": [

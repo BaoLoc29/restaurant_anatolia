@@ -8,8 +8,8 @@ const Team = () => {
         <div className="heading_section">
           <h1 className="heading">OUR TEAM</h1>
           <p>
-            Đội ngũ CEO kinh nghiệm cao đứng đầu về hệ thống chuỗi nhà hàng kinh
-            doanh Anatolia.
+            Đội ngũ CEO kinh nghiệm cao đứng đầu về hệ thống chuỗi nhà hàng 5
+            sao - Anatolia.
           </p>
         </div>
         <div className="team_container">
