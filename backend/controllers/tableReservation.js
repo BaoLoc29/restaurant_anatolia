@@ -57,15 +57,23 @@ export const orderFood = async (req, res) => {
         });
 
         // Trừ đi số tiền đặt cọc
-        if (tableReservation.deposit) {
-            totalAmount -= tableReservation.depositAmount;
+        let depositAmount = tableReservation.depositAmount || 0; // Xác định depositAmount từ tableReservation.depositAmount, nếu không có thì mặc định là 0
+        if (tableReservation.deposit && totalAmount >= depositAmount) {
+            totalAmount -= depositAmount;
+        }
+        // Tính toán giá trị paid
+        let paid;
+        if (totalAmount < depositAmount) {
+            paid = totalAmount;
+        } else {
+            paid = totalAmount + depositAmount;
         }
 
         tableReservation.totalAmount = totalAmount;
-
+        tableReservation.paid = paid;
         await tableReservation.save();
 
-        return res.status(200).json({ success: true, message: "Đã cập nhật số lượng món vào đơn đặt hàng và tính tổng tiền thành công.", tableReservation });
+        return res.status(200).json({ success: true, message: "Đã cập nhật số lượng món vào đơn đặt hàng và tính tổng tiền thành công.", paid, tableReservation });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
@@ -132,48 +140,81 @@ export const getOrderById = async (req, res) => {
 }
 export const statistics = async (req, res) => {
     try {
-        const yearToQuery = 2024;
+        const { startYear, endYear } = req.query;
+
+        if (!startYear || !endYear) {
+            return res.status(400).json({ success: false, message: "Vui lòng nhập đầy đủ startYear và endYear" });
+        }
+
         const totalRevenueByYear = await TableReservation.aggregate([
             {
                 $match: {
+                    // Đổi status thành "Đã thanh toán"
                     status: "Chưa thanh toán",
                     reservationDate: {
-                        $gte: new Date(yearToQuery, 0, 1), // Từ ngày 1 tháng 1 năm được chỉ định
-                        $lt: new Date(yearToQuery + 1, 0, 1) // Đến ngày 1 tháng 1 năm sau
+                        $gte: new Date(startYear, 0, 1), // Từ ngày 1 tháng 1 của startYear
+                        $lt: new Date(endYear + 1, 0, 1) // Đến ngày 1 tháng 1 của endYear + 1
                     }
                 }
             },
             {
                 $group: {
-                    _id: { $month: "$reservationDate" }, // Nhóm theo tháng
-                    total: { $sum: "$totalAmount" } // Tính tổng doanh thu từ trường totalAmount
+                    _id: {
+                        year: { $year: "$reservationDate" },
+                        month: { $month: "$reservationDate" }
+                    },
+                    total: { $sum: "$paid" }
                 }
             },
             {
-                $sort: { _id: 1 } // Sắp xếp kết quả theo tháng tăng dần
+                $sort: { "_id.year": 1, "_id.month": 1 } // Sắp xếp kết quả theo năm và tháng tăng dần
             }
         ]);
 
-        // Tạo mảng chứa tất cả các tháng từ 1 đến 12 với giá trị mặc định là 0
-        const allMonths = Array.from({ length: 12 }, (v, i) => ({
-            month: i + 1,
-            2024: 0
-        }));
+        // Tạo mảng chứa tất cả các tháng từ 1 đến 12 cho hai năm startYear và endYear
+        const allMonths = [];
+        for (let year of [parseInt(startYear), parseInt(endYear)]) {
+            for (let month = 1; month <= 12; month++) {
+                allMonths.push({ year, month, total: 0 });
+            }
+        }
 
         // Mảng chứa các từ viết tắt của tháng trong tiếng Anh
         const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
         // Kết hợp kết quả từ aggregate với mảng allMonths và đổi tháng thành từ viết tắt
         const result = allMonths.map(monthObj => {
-            const monthData = totalRevenueByYear.find(data => data._id === monthObj.month);
+            const monthData = totalRevenueByYear.find(data => data._id.year === monthObj.year && data._id.month === monthObj.month);
             const monthName = monthAbbreviations[monthObj.month - 1];
-            return monthData ? { month: monthName, 2024: monthData.total } : { month: monthName, 2024: 0 };
+            return {
+                month: monthName,
+                year: monthObj.year,
+                total: monthData ? monthData.total : 0
+            };
+        });
+
+        // Tạo cấu trúc kết quả cuối cùng nhóm theo năm và tháng
+        const finalResult = {};
+        result.forEach(item => {
+            if (!finalResult[item.month]) {
+                finalResult[item.month] = {};
+            }
+            finalResult[item.month][item.year] = item.total;
+        });
+
+        // Đảm bảo mỗi tháng có đủ dữ liệu của cả hai năm
+        Object.keys(finalResult).forEach(month => {
+            for (let year of [parseInt(startYear), parseInt(endYear)]) {
+                if (!finalResult[month][year]) {
+                    finalResult[month][year] = 0;
+                }
+            }
         });
 
         // Trả về kết quả trong JSON response
-        return res.status(200).json({ success: true, totalRevenueByYear: result });
+        return res.status(200).json({ success: true, totalRevenueByYear: finalResult });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
     }
-}
+};
 
