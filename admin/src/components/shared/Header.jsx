@@ -1,10 +1,5 @@
 import React, { Fragment } from "react";
-import { Menu, Popover, Transition } from "@headlessui/react";
-import {
-  HiOutlineBell,
-  HiOutlineChatAlt,
-  HiOutlineSearch,
-} from "react-icons/hi";
+import { Menu, Transition } from "@headlessui/react";
 import { useNavigate } from "react-router-dom";
 import classNames from "classnames";
 import { logout } from "../../feature/user/userSlice.js";

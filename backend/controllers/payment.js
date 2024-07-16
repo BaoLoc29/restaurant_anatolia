@@ -1,11 +1,11 @@
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
 import moment from 'moment';
-import { scheduleCancellation } from '../middlewares/cancellation.js';
-import { scheduleDepositUpdate } from '../middlewares/depositUpdate.js';
 import { Reservation } from '../models/reservation.js';
 import { TableReservation } from '../models/tableReservation.js';
 import Table from '../models/table.js';
+import { scheduleCancellation } from '../middlewares/cancellation.js';
+import { scheduleDepositUpdate } from '../middlewares/depositUpdate.js';
 
 // Reuse extracted functions
 const synonymKeywords = {
@@ -128,7 +128,6 @@ const createCheckoutSession = async (req, res) => {
         });
         await newTableReservation.save();
 
-        await scheduleDepositUpdate(reservationDateTime, availableTable, savedReservation);
         await scheduleCancellation(reservationDateTime, savedReservation);
 
         if (deposit) {
@@ -150,6 +149,7 @@ const createCheckoutSession = async (req, res) => {
                 success_url: `${success_url}?reservationId=${savedReservation._id}`,
                 cancel_url: `${cancel_url}?reservationId=${savedReservation._id}`,
                 metadata: {
+
                     reservationId: savedReservation._id.toString(),
                     name,
                     email,
@@ -168,6 +168,8 @@ const createCheckoutSession = async (req, res) => {
             console.log("Reservation saved successfully without deposit.");
             res.json({ success: true, message: 'Reservation created successfully' });
         }
+
+
     } catch (error) {
         console.error("Error during checkout session creation:", error);
         res.status(500).json({ success: false, message: 'Error creating reservation or session' });
@@ -221,6 +223,10 @@ const handlePaymentSuccess = async (session) => {
                 tableReservation.statusReservation = "Đã đặt trước";
                 await tableReservation.save();
             }
+
+            const reservationDateTime = moment(reservation.date);
+            const availableTable = await Table.findOne({ id_table: reservation.table });
+            await scheduleDepositUpdate(reservationDateTime, availableTable, reservation);
         } else {
             console.error("Reservation not found:", reservationId);
         }
