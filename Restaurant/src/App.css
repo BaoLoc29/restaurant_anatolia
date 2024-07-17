@@ -594,7 +594,7 @@ nav svg {
     width: 50%;
   }
   .menu .container .dishes_container .card img {
-    height: auto;
+    height: 350px;
   }
   .menu .container .dishes_container .card h3 {
     font-size: 1.6rem;
