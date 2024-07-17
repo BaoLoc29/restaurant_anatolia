@@ -6,7 +6,7 @@ const Footer = () => {
       <div className="container">
         <div className="banner">
           <div className="left">
-            <img src="./dist/logo_image.png" alt="" width="180" />
+            <img src="/logo_image.png" alt="" width="180" />
           </div>
           <div className="right">
             <p> HO CHI MINH, VIETNAM</p>
@@ -15,10 +15,10 @@ const Footer = () => {
         </div>
         <div className="banner">
           <div className="left">
-            <p>Developed By XEN</p>
+            <p>Developed By Huy and An</p>
           </div>
           <div className="right">
-            <p>All Rights Reserved By XEN.</p>
+            <p>All Rights Reserved By Huy and An.</p>
           </div>
         </div>
       </div>
