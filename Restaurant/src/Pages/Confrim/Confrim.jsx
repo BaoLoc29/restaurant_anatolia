@@ -150,7 +150,7 @@ const Confirm = () => {
                       setState((prevState) => ({
                         ...prevState,
                         depositOption: e.target.value,
-                        errorMessage: "", // Xóa thông báo lỗi khi thay đổi
+                        errorMessage: "", 
                       }))
                     }
                   >
