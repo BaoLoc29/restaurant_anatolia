@@ -77,19 +77,19 @@
       "team": [
         {
           "id": 1,
-          "image": "../dist/loc.png",
+          "image": "./dist/loc.png",
           "name": "Trần Bảo Lộc",
           "designation": "Founder & Head Chef"
         },
         {
           "id": 2,
-          "image": "../dist/Huy.jpg",
+          "image": "./dist/Huy.jpg",
           "name": "Vũ Lê Huy",
           "designation": "Sous Chef"
         },
         {
           "id": 3,
-          "image": "../dist/an.jpg",
+          "image": "./dist/an.jpg",
           "name": "Phan Thiên Ân",
           "designation": "Fast Food Chef"
         }

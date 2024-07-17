@@ -51,9 +51,9 @@
 /* Responsive design */
 @media (max-width: 1024px) {
   .restaurant-card {
-    width: 90%; /* Reduce width */
-    height: auto; /* Auto height */
-    flex-direction: column; /* Change flex direction */
+    width: 90%;
+    height: 650px;
+    flex-direction: column;
   }
 
   .restaurant-image {
@@ -85,9 +85,9 @@
 
 @media (max-width: 768px) {
   .restaurant-card {
-    width: 95%; /* Slightly reduce width */
-    height: auto; /* Auto height */
-    flex-direction: column; /* Change flex direction */
+    width: 95%;
+    height: 450px;
+    flex-direction: column;
   }
 
   .restaurant-name {
@@ -107,7 +107,7 @@
 @media (max-width: 480px) {
   .restaurant-card {
     width: 100%; /* Full width */
-    height: auto; /* Auto height */
+    height: 540px; /* Auto height */
     flex-direction: column; /* Change flex direction */
   }
 
