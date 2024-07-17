@@ -118,7 +118,7 @@ const Confirm = () => {
     <section className="confirm">
       <div className="container">
         <div className="confirm_box">
-          <img src="./dist/logo_image.png" alt="Logo" className="logo" />
+          <img src="/logo_image.png" alt="Logo" className="logo" />
           <h1>Xác Nhận Đặt Chỗ</h1>
           <p>
             Nếu bạn đặt cọc tối thiểu 200.000đ, bạn sẽ được giữ chỗ lâu hơn 30

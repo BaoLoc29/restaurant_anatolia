@@ -49,7 +49,7 @@ const Success = () => {
     <section className="notFound">
       <div className="container">
         <div className="success-popup">
-          <img src="./dist/sandwich.png" alt="success" />
+          <img src="/sandwich.png" alt="success" />
           <h1>Đặt bàn thành công!</h1>
           <div className="reservation-info">
             <p>

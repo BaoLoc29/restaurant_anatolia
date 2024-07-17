@@ -8,7 +8,7 @@ const Navbar = () => {
     <>
       <nav>
         <div className="logo">
-          <img src="./dist/logo_image.png" alt="logo" width={180} />
+          <img src="/logo_image.png" alt="logo" width={180} />
         </div>
         <div className={show ? "navLinks showmenu" : "navLinks"}>
           <div className="links">
