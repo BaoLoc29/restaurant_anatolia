@@ -18,7 +18,7 @@ import {
   getDetailOrderFood,
   deleteOrder,
 } from "../services/orderFood.js";
-import { IoIosPrint } from "react-icons/io";
+import { createCheckoutSession } from "../services/payment.js";
 import { MdDelete, MdLocalPrintshop } from "react-icons/md";
 import { TbBrandAirtable } from "react-icons/tb";
 import ModalGetReservation from "../components/ModalGetReservation/index.jsx";
@@ -42,6 +42,23 @@ const OrderDish = () => {
   const [depositAmount, setDepositAmount] = useState(0);
   const [orderData, setOrderData] = useState({ dishes: [], depositAmount: 0 });
   const { Option } = AutoComplete;
+
+  const handleCheckout = async () => {
+    try {
+      setLoading(true);
+      const response = await createCheckoutSession(selectedTable);
+      if (response.data.success) {
+        window.location.href = response.data.session_url;
+      } else {
+        toast.error("Failed to initiate payment session.");
+      }
+    } catch (error) {
+      console.error("Error initiating payment:", error);
+      toast.error("Failed to initiate payment session.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getMenus = useCallback(async () => {
     try {
@@ -121,6 +138,7 @@ const OrderDish = () => {
   };
   const handleSelectTable = (reservationId) => {
     setSelectedTable(reservationId);
+    console.log(reservationId);
     setModalGetReservation(false);
   };
 
@@ -168,30 +186,6 @@ const OrderDish = () => {
       }));
     }
   };
-
-  // const handleDeleteDish = async (reservaionId, dishCode) => {
-  //   if (selectedTable) {
-  //     try {
-  //       const response = await deleteOrder(reservaionId, dishCode);
-  //       if (response.data.success) {
-  //         setOrderData((prevData) => ({
-  //           ...prevData,
-  //           dishes: prevData.dishes.filter((dish) => dish.code !== dishCode),
-  //         }));
-  //         notification.success({
-  //           message: "Thành công",
-  //           description: "Đã xóa món ăn khỏi đơn đặt hàng thành công!",
-  //         });
-  //       }
-  //     } catch (error) {
-  //       console.log(error);
-  //       notification.error({
-  //         message: "Lỗi",
-  //         description: "Có lỗi xảy ra khi xóa món ăn.",
-  //       });
-  //     }
-  //   }
-  // };
 
   const handleDeleteDish = async (reservationId, dishCode) => {
     const dishToDelete = orderData.dishes.find(
@@ -559,18 +553,13 @@ const OrderDish = () => {
           <div className="h-[16rem] flex items-center justify-between mb-1">
             <div className="flex justify-between">
               <Button
+                loading={loading}
                 className="flex flex-col items-center text-base p-3 h-[4rem] w-[6rem]"
                 type="text"
                 icon={<MdLocalPrintshop className="text-xl" />}
+                onClick={handleCreateOrder}
               >
                 In tạm tính
-              </Button>
-              <Button
-                className="flex flex-col items-center text-base p-3 h-[4rem] w-[6rem]"
-                type="text"
-                icon={<IoIosPrint className="text-xl" />}
-              >
-                In Bếp
               </Button>
             </div>
             <div className="flex flex-col items-end justify-end text-right">
@@ -592,7 +581,7 @@ const OrderDish = () => {
               loading={loading}
               type="primary"
               className="text-lg h-[3rem] w-full"
-              onClick={handleCreateOrder}
+              onClick={handleCheckout}
             >
               Thanh Toán
             </Button>

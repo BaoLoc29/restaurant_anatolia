@@ -6,6 +6,7 @@ import cors from "cors"
 import bodyParser from "body-parser";
 import { errorMiddleware } from "./middlewares/error.js";
 import { handleStripeWebhook } from './controllers/payment.js';
+import { handleStripe } from "./controllers/adminPayment.js";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(cors({
 
 // Middleware để xử lý raw body cho webhook Stripe
 app.post("/payment/webhook", bodyParser.raw({ type: "application/json" }), handleStripeWebhook);
+app.post("/admin-payment/webhook", bodyParser.raw({ type: "application/json" }), handleStripe);
+
 
 // Sử dụng body-parser để xử lý JSON và x-www-form-urlencoded
 app.use(express.json());

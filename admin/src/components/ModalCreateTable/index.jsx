@@ -117,7 +117,11 @@ const ModalCreateTable = ({
                   },
                 ]}
               >
-                <Select placeholder="--Chọn trạng thái bàn--" size="large">
+                <Select
+                  placeholder="--Chọn trạng thái bàn--"
+                  size="large"
+                  disabled
+                >
                   <Select.Option value="Còn trống">Còn trống</Select.Option>
                   <Select.Option value="Đang sử dụng">
                     Đang sử dụng
