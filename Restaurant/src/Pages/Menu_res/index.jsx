@@ -3,10 +3,12 @@ import { useLocation, Link, useNavigate } from "react-router-dom";
 import "./style.css";
 import Footer from "../../components/Footer";
 import { getAll } from "../../services/menu_res.js";
+import data from "../../restApi.json";
 
 const Menu_res = () => {
   const [foodMenus, setFoodMenus] = useState([]);
   const [drinkMenus, setDrinkMenus] = useState([]);
+  const [dishes, setDishes] = useState([]);
   const location = useLocation();
   const { category } = location.state || {};
   const [error, setError] = useState("");
@@ -16,6 +18,7 @@ const Menu_res = () => {
     try {
       const result = await getAll();
       const menus = result.data.menuslist;
+      const dishes = data.data[0].dishes;
       console.log(menus);
 
       const foodItems = menus.filter(
@@ -24,7 +27,10 @@ const Menu_res = () => {
       const drinkItems = menus.filter(
         (menu) => menu.classify === "Đồ uống" && menu.category === category
       );
+      const dish = dishes.find((dish) => dish.category === category);
+      const description = dish ? dish.description : "";
 
+      setDishes(description);
       setFoodMenus(foodItems);
       setDrinkMenus(drinkItems);
     } catch (error) {
@@ -45,7 +51,7 @@ const Menu_res = () => {
   }
 
   const handleBackToMenu = () => {
-    navigate(-1);
+    navigate(-2);
   };
 
   useEffect(() => {
@@ -56,12 +62,48 @@ const Menu_res = () => {
     }
   }, [category]);
 
+  const categoryImages = {
+    "Bữa sáng": {
+      image1: "./BG-MonAnSang.jpg",
+      image2: "./BG-ThucUongSang.jpg",
+    },
+    "Bữa trưa": {
+      image1: "./BG-MonAnTrua.jpg",
+      image2: "./BG-ThucUongTrua.jpg",
+    },
+    "Bữa tối": {
+      image1: "./BG-MonAnToi.jpg",
+      image2: "./BG-ThucUongToi.jpg",
+    },
+    "Ngày tết": {
+      image1: "./BG-MonAnTet.jpg",
+      image2: "./BG-ThucUongTet.jpg",
+    },
+    Noel: {
+      image1: "./BG-MonAnNoel.jpg",
+      image2: "./BG-ThucUongNoel.jpg",
+    },
+    "Tình nhân": {
+      image1: "./BG-MonAnVal.jpg",
+      image2: "./BG-ThucUongVal.jpg",
+    },
+    "Gia đình": {
+      image1: "./BG-MonAnGiaDinh.jpg",
+      image2: "./BG-ThucUongGiaDinh.jpg",
+    },
+    "Lương về": {
+      image1: "./BG-MonAnLuongve.jpg",
+      image2: "./BG-ThucUongLuongve.jpg",
+    },
+  };
+  const { image1, image2 } = categoryImages[category];
+
   return (
     <div className="menu-res">
       <div className="menu-res-nav">
         <Link to={"/"}>
           <div className="menu-res-logo">
-            <img src="/logo_image.png" alt="logo" width={180} />
+            <img src="../../public/logo_image.png" alt="logo" width={180} />
           </div>
         </Link>
 
@@ -71,49 +113,42 @@ const Menu_res = () => {
           </button>
         </div>
       </div>
-      <div className="menu-res-title">{category}</div>
+      <div className="menu-res-Background">
+        <div className="menu-res-item">
+          <div className="menu-res-item-image">
+            <img src={image1} alt="Food" />
+          </div>
+          <div className="menu-res-item-content">
+            <h1 style={{ color: "red" }}>{dishes}</h1>
+            <table>
+              <tbody>
+                {foodMenus.slice(0, 8).map((menu) => (
+                  <tr key={menu._id}>
+                    <td>{menu.name}</td>
+                    <td>{formatCurrency(menu.price)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-      <div className="menu-res-item">
-        <div className="menu-res-item-image">
-          <img
-            src="https://i0.wp.com/blog.petpooja.com/wp-content/uploads/2021/10/cultural-cuisine.jpg?resize=696%2C385&ssl=1"
-            alt="Food"
-          />
-        </div>
-        <div className="menu-res-item-content">
-          <h1>MÓN ĂN</h1>
-          <table>
-            <tbody>
-              {foodMenus.slice(0, 8).map((menu) => (
-                <tr key={menu._id}>
-                  <td>{menu.name}</td>
-                  <td>{formatCurrency(menu.price)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <div className="menu-res-item">
-        <div className="menu-res-item-content">
-          <h1>THỨC UỐNG</h1>
-          <table>
-            <tbody>
-              {drinkMenus.slice(0, 8).map((menu) => (
-                <tr key={menu._id}>
-                  <td>{menu.name}</td>
-                  <td>{formatCurrency(menu.price)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="menu-res-item-image">
-          <img
-            src="https://www.mashed.com/img/gallery/50-agree-that-these-2-chain-restaurants-have-the-best-specialty-cocktails/l-intro-1626274321.jpg"
-            alt="Drink"
-          />
+        <div className="menu-res-item">
+          <div className="menu-res-item-content">
+            <table>
+              <tbody>
+                {drinkMenus.slice(0, 8).map((menu) => (
+                  <tr key={menu._id}>
+                    <td>{menu.name}</td>
+                    <td>{formatCurrency(menu.price)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="menu-res-item-image">
+            <img src={image2} alt="Drink" />
+          </div>
         </div>
       </div>
 
