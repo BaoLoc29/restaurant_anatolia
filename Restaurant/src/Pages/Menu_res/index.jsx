@@ -103,7 +103,7 @@ const Menu_res = () => {
       <div className="menu-res-nav">
         <Link to={"/"}>
           <div className="menu-res-logo">
-            <img src="../../public/logo_image.png" alt="logo" width={180} />
+            <img src="/logo_image.png" alt="logo" width={180} />
           </div>
         </Link>
 
