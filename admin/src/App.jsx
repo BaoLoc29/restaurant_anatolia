@@ -15,6 +15,7 @@ import Table from "./components/Table.jsx";
 import Menu from "./components/Menu.jsx";
 import SessionExpiredPopup from "../src/components/SessionExpiredPopup/index.jsx";
 import OrderDish from "./components/OrderDish.jsx";
+import PaymentSuccess from "./components/shared/PaymentSuccess.jsx";
 
 const App = () => {
   const user = useSelector((state) => state.users.user);
@@ -60,6 +61,7 @@ const App = () => {
               <Route path="menus" element={<Menu />} />
               <Route path="my-profile" element={<Profile />} />
             </Route>
+            <Route path="payment-success" element={<PaymentSuccess />} />
           </Route>
         )}
       </Routes>

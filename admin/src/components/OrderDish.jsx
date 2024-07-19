@@ -8,12 +8,16 @@ import {
   Table,
   Alert,
   Empty,
-  // Image,
   notification,
+  Popconfirm,
 } from "antd";
 import React, { useCallback, useEffect, useState } from "react";
 import { getPagingMenu, getAllMenu, searchMenu } from "../services/menu.js";
-import { createOrderFood, getDetailOrderFood } from "../services/orderFood.js";
+import {
+  createOrderFood,
+  getDetailOrderFood,
+  deleteOrder,
+} from "../services/orderFood.js";
 import { IoIosPrint } from "react-icons/io";
 import { MdDelete, MdLocalPrintshop } from "react-icons/md";
 import { TbBrandAirtable } from "react-icons/tb";
@@ -86,6 +90,7 @@ const OrderDish = () => {
     setPageSize(pageSize);
     setPageIndex(pageIndex);
   };
+
   const handleCategoryClick = (category) => {
     if (activeCategory === category) {
       setActiveCategory(null);
@@ -130,69 +135,110 @@ const OrderDish = () => {
     }));
   };
 
-  const addDishToOrder = (code, dishName, price, image) => {
-    if (selectedTable) {
-      setOrderData((prevOrderData) => {
-        const existingDishIndex = prevOrderData.dishes.findIndex(
-          (dish) => dish.code === code
-        );
-
-        if (existingDishIndex !== -1) {
-          const updatedDishes = prevOrderData.dishes.map((dish, index) => {
-            if (index === existingDishIndex) {
-              return { ...dish, quantity: dish.quantity + 1 };
-            }
-            return dish;
-          });
-          notification.success({
-            message: <span className="font-bold">Thêm món ăn</span>,
-            description: `Đã thêm món "${dishName}" vào đơn hàng.`,
-          });
-          return { ...prevOrderData, dishes: updatedDishes };
-        } else {
-          const newDish = {
-            key: prevOrderData.dishes.length + 1,
-            code,
-            dishName,
-            price,
-            quantity: 1,
-            image,
-          };
-          notification.success({
-            message: <span className="font-bold">Thêm món ăn</span>,
-            description: `Đã thêm món "${dishName}" vào đơn hàng.`,
-          });
-          return {
-            ...prevOrderData,
-            dishes: [newDish, ...prevOrderData.dishes],
-          };
-        }
-      });
-    } else {
+  const addDishToOrder = (code, dishName, price) => {
+    if (!selectedTable) {
       notification.error({
         message: <span className="font-bold">Chọn bàn</span>,
         description: "Vui lòng chọn bàn trước khi thêm món ăn.",
       });
       setModalGetReservation(true);
+      return;
+    }
+
+    const existingDishIndex = orderData.dishes.findIndex(
+      (dish) => dish.code === code
+    );
+
+    const newDish = {
+      code,
+      dishName,
+      price,
+      quantity: 1,
+    };
+
+    if (existingDishIndex !== -1) {
+      setOrderData((prevOrderData) => ({
+        ...prevOrderData,
+        dishes: [newDish, ...prevOrderData.dishes],
+      }));
+    } else {
+      setOrderData((prevOrderData) => ({
+        ...prevOrderData,
+        dishes: [newDish, ...prevOrderData.dishes],
+      }));
     }
   };
 
-  const handleDeleteDish = (key) => {
-    const newOrderData = orderData.dishes.filter((item) => item.key !== key);
-    setOrderData({
-      ...orderData,
-      dishes: newOrderData,
-    });
+  // const handleDeleteDish = async (reservaionId, dishCode) => {
+  //   if (selectedTable) {
+  //     try {
+  //       const response = await deleteOrder(reservaionId, dishCode);
+  //       if (response.data.success) {
+  //         setOrderData((prevData) => ({
+  //           ...prevData,
+  //           dishes: prevData.dishes.filter((dish) => dish.code !== dishCode),
+  //         }));
+  //         notification.success({
+  //           message: "Thành công",
+  //           description: "Đã xóa món ăn khỏi đơn đặt hàng thành công!",
+  //         });
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //       notification.error({
+  //         message: "Lỗi",
+  //         description: "Có lỗi xảy ra khi xóa món ăn.",
+  //       });
+  //     }
+  //   }
+  // };
+
+  const handleDeleteDish = async (reservationId, dishCode) => {
+    const dishToDelete = orderData.dishes.find(
+      (dish) => dish.code === dishCode
+    );
+    if (!dishToDelete._id) {
+      setOrderData((prevData) => ({
+        ...prevData,
+        dishes: prevData.dishes.filter((dish) => dish.code !== dishCode),
+      }));
+
+      notification.success({
+        message: "Thành công",
+        description: "Đã xóa món ăn khỏi đơn đặt hàng thành công!",
+      });
+      return;
+    }
+    if (selectedTable) {
+      try {
+        const response = await deleteOrder(reservationId, dishCode);
+        if (response.data.success) {
+          setOrderData((prevData) => ({
+            ...prevData,
+            dishes: prevData.dishes.filter((dish) => dish.code !== dishCode),
+          }));
+          notification.success({
+            message: "Thành công",
+            description: "Đã xóa món ăn khỏi đơn đặt hàng thành công!",
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        notification.error({
+          message: "Lỗi",
+          description: "Có lỗi xảy ra khi xóa món ăn.",
+        });
+      }
+    }
   };
 
   const handleCreateOrder = async () => {
     try {
-      if (orderData.dishes.length === 0) {
-        throw new Error("Không có món ăn nào được chọn.");
-      }
+      console.log(orderData);
+      const newDishes = orderData.dishes.filter((dish) => !dish._id);
 
       const data = {
-        dishes: orderData.dishes.map((dish) => ({
+        dishes: newDishes.map((dish) => ({
           code: dish.code,
           quantity: dish.quantity,
         })),
@@ -289,20 +335,26 @@ const OrderDish = () => {
       title: "Hành động",
       key: "action",
       align: "center",
-      render: (row) => {
+      render: (record) => {
         return (
           <div className="flex gap-2 justify-center">
-            <MdDelete
-              className="text-red-500 text-2xl hover:text-red-700 cursor-pointer"
-              onClick={() => handleDeleteDish(row.key)}
-            />
+            <Popconfirm
+              title="Xóa món ăn khỏi đơn đặt hàng"
+              description="Bạn có chắc muốn xóa món ăn này không?!!"
+              onConfirm={() => handleDeleteDish(selectedTable, record.code)}
+              okText="Đồng ý"
+              cancelText="Hủy"
+              cursor
+            >
+              <MdDelete className="text-red-500 text-2xl hover:text-red-700 cursor-pointer" />
+            </Popconfirm>
           </div>
         );
       },
     },
   ];
   return (
-    <div className="flex justify-between h-[37rem]">
+    <div className="flex justify-between h-[39rem]">
       {/* Tìm món */}
       <div className="bg-white p-4 w-[15rem]">
         <AutoComplete
@@ -341,8 +393,10 @@ const OrderDish = () => {
 
         <ul className="mt-3">
           <li
-            className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
-              activeCategory === null ? "bg-gray-300" : "hover:bg-gray-300"
+            className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded-lg inline-block transition duration-300 cursor-pointer flex items-center ${
+              activeCategory === null
+                ? "border border-gray-900"
+                : "hover:bg-gray-200"
             }`}
             onClick={() => handleCategoryClick(null)}
           >
@@ -351,10 +405,10 @@ const OrderDish = () => {
           {categories.map((category) => (
             <li
               key={category}
-              className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded inline-block transition duration-300 cursor-pointer flex items-center ${
+              className={`w-[13rem] h-10 text-sm text-left mb-3 px-3 border border-gray-300 rounded-lg inline-block transition duration-300 cursor-pointer flex items-center ${
                 activeCategory === category
-                  ? "bg-gray-300"
-                  : "hover:bg-gray-300"
+                  ? "border border-gray-900"
+                  : "hover:bg-gray-200"
               }`}
               onClick={() => handleCategoryClick(category)}
             >
@@ -426,7 +480,7 @@ const OrderDish = () => {
         />
       </div>
       {/* Đặt món */}
-      <div className="w-[37rem] h-[37rem] bg-white p-4">
+      <div className="w-[37rem] h-[39rem] bg-white p-4">
         <div className="flex mb-2 justify-between w-full">
           <Alert
             message={
@@ -459,7 +513,7 @@ const OrderDish = () => {
           />
         </div>
         {/* Đặt món */}
-        <div className="h-[32rem] flex flex-col justify-between">
+        <div className="h-[34rem] flex flex-col justify-between">
           <div className="h-[200rem] overflow-y-auto mt-2 mb-0">
             {orderData.dishes.length > 0 ? (
               <Table
@@ -470,11 +524,11 @@ const OrderDish = () => {
                 rowKey={(record) => record.key}
               />
             ) : (
-              <div className="flex items-center justify-center w-full h-[19rem] bg-gray-100">
+              <div className="flex items-center justify-center w-full h-[22rem] bg-gray-100">
                 <Empty
                   description={
                     <span className="font-bold text-gray-400">
-                      Chưa có món ăn nào được thêm
+                      Chưa có món ăn nào được thêm!
                     </span>
                   }
                 />

@@ -283,7 +283,7 @@ export const searchMenu = async (req, res) => {
 }
 export const getAllMenu = async (req, res) => {
     try {
-        const menus = await Menu.find().sort({ createdAt: "desc" })
+        const menus = await Menu.find({ status: "Còn món" }).sort({ createdAt: "desc" })
 
         const totalMenu = await Menu.countDocuments();
 

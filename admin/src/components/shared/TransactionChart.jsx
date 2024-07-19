@@ -45,8 +45,18 @@ const TransactionChart = () => {
     }
   };
 
+  const formatTick = (tick) => {
+    if (tick >= 1e9) {
+      return `${(tick / 1e9).toFixed(1)}B`;
+    } else if (tick >= 1e6) {
+      return `${(tick / 1e6).toFixed(1)}M`;
+    } else {
+      return tick;
+    }
+  };
+
   return (
-    <div className="h-[22rem] bg-white p-4 rounded-sm border border-gray-200 flex flex-col flex-1">
+    <div className="h-[24rem] bg-white p-4 rounded-sm border border-gray-200 flex flex-col flex-1">
       <div className="flex justify-between ">
         <strong className="text-gray-700 font-medium">
           Thống kê doanh thu
@@ -73,11 +83,11 @@ const TransactionChart = () => {
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="month" />
-            <YAxis />
+            <YAxis tickFormatter={formatTick} />
             <Tooltip />
             <Legend />
             <Bar dataKey="2023" fill="#e74c3c" />
-            <Bar dataKey="2024" fill="#0ea5e9" />
+            <Bar dataKey="2024" fill="#0084ff" />
           </BarChart>
         </ResponsiveContainer>
       </div>

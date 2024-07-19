@@ -404,7 +404,7 @@ export const getTotalUser = async (req, res) => {
         const sevenDaysAgo = moment().subtract(7, 'days').toDate();
 
         // Đếm số nhân viên được thêm vào trong 7 ngày gần nhất
-        const recentUsers = await User.countDocuments({ createdAt: { $gte: sevenDaysAgo } });
+        const recentUsers = await User.countDocuments({ createdAt: { $gte: sevenDaysAgo }, role: "Nhân viên" });
 
         return res.status(200).json({ totalUser, recentUsers });
 

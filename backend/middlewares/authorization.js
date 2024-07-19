@@ -2,7 +2,7 @@ const authorization = async (req, res, next) => {
     try {
         const user = req.user
         if (!(user.role == "Quản lý")) {
-            return res.status(403).json({ message: "Bạn không có quyền truy cập trang này!" })
+            return res.status(403).json({ success: false, message: "Bạn không có quyền truy cập trang này!" })
         }
         next()
     } catch (error) {

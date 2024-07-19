@@ -12,7 +12,6 @@ import {
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 import { TiDelete } from "react-icons/ti";
-import { toast } from "react-hot-toast";
 import ModalCreatUser from "./ModalCreateUser/index.jsx";
 import {
   getPagingUser,
@@ -22,6 +21,7 @@ import {
   searchUser,
 } from "../services/user.js";
 import { PlusOutlined } from "@ant-design/icons";
+import { toast } from "react-hot-toast";
 
 const Employee = () => {
   const [users, setUsers] = useState([]);
@@ -240,7 +240,7 @@ const Employee = () => {
   };
 
   return (
-    <div className="h-[37.45rem]">
+    <div className="h-screen">
       <div className="flex justify-between items-center px-2 pb-4 pr-4 pl-4 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách nhân viên</h1>
         <Space.Compact className="w-[32rem] relative">

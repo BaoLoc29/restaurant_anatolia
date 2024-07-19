@@ -15,31 +15,31 @@ export const orderFood = async (req, res) => {
         }
 
         const tableReservation = await TableReservation.findOne({ reservationId });
-
         if (!tableReservation || tableReservation.statusReservation === "Đã hủy") {
             return res.status(404).json({ success: false, message: "Đơn đặt hàng không tồn tại hoặc đã bị hủy." });
         }
 
-        // Lấy thông tin món ăn từ model Menu
         const menuDishes = await Menu.find({ code: { $in: dishes.map(dish => dish.code) } });
-
         if (!menuDishes.length) {
             return res.status(404).json({ success: false, message: "Không tìm thấy món ăn nào." });
         }
 
-        // Cập nhật hoặc thêm món ăn vào đơn đặt hàng và tính tổng tiền
+        // Lưu các món ăn hiện tại để kiểm tra xem có món nào cần cập nhật không
+        const currentDishes = new Map(tableReservation.dishes.map(dish => [dish.code, dish]));
+
+        const newDishes = [];
+        // Cập nhật hoặc thêm món ăn vào danh sách tạm thời và tính tổng tiền
         dishes.forEach(dish => {
             const menuDish = menuDishes.find(m => m.code === dish.code);
             if (menuDish) {
-                // Kiểm tra xem món ăn đã có trong danh sách chưa
-                const existingDish = tableReservation.dishes.find(d => d.code === dish.code);
-                if (existingDish) {
-                    // Nếu đã có, cập nhật số lượng
+                if (currentDishes.has(dish.code)) {
+                    // Nếu món ăn đã tồn tại, cập nhật số lượng và tổng tiền
+                    const existingDish = currentDishes.get(dish.code);
                     existingDish.quantity += dish.quantity;
                     existingDish.totalPerDish = menuDish.price * existingDish.quantity;
                 } else {
-                    // Nếu chưa có, thêm mới
-                    tableReservation.dishes.push({
+                    // Nếu món ăn chưa tồn tại, thêm mới vào danh sách newDishes
+                    newDishes.push({
                         dishName: menuDish.name,
                         price: menuDish.price,
                         quantity: dish.quantity,
@@ -50,6 +50,9 @@ export const orderFood = async (req, res) => {
             }
         });
 
+        // Cập nhật lại danh sách món ăn hiện tại
+        tableReservation.dishes = Array.from(currentDishes.values()).concat(newDishes);
+
         // Cập nhật tổng tiền
         let totalAmount = 0;
         tableReservation.dishes.forEach(dish => {
@@ -57,10 +60,11 @@ export const orderFood = async (req, res) => {
         });
 
         // Trừ đi số tiền đặt cọc
-        let depositAmount = tableReservation.depositAmount || 0; // Xác định depositAmount từ tableReservation.depositAmount, nếu không có thì mặc định là 0
+        let depositAmount = tableReservation.depositAmount || 0;
         if (tableReservation.deposit && totalAmount >= depositAmount) {
             totalAmount -= depositAmount;
         }
+
         // Tính toán giá trị paid
         let paid;
         if (totalAmount < depositAmount) {
@@ -217,4 +221,70 @@ export const statistics = async (req, res) => {
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+export const getTop3Dishes = async (req, res) => {
+    try {
+        const topDishes = await TableReservation.aggregate([
+            { $unwind: "$dishes" },
+            {
+                $group: {
+                    _id: "$dishes.dishName",
+                    totalQuantity: { $sum: "$dishes.quantity" }
+                }
+            },
+            { $sort: { totalQuantity: -1 } },
+            { $limit: 3 }
+        ]);
 
+        return res.status(200).json({ success: true, topDishes });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+export const deleteOrder = async (req, res) => {
+    try {
+        const { reservationId, dishCode } = req.params;
+
+        // Tìm đơn đặt bàn bằng reservationId
+        const tableReservation = await TableReservation.findOne({ reservationId });
+        if (!tableReservation || tableReservation.statusReservation === "Đã thanh toán") {
+            return res.status(404).json({ success: false, message: "Đơn đặt hàng không tồn tại!" });
+        }
+
+        // Tìm và xóa món ăn bằng dishCode
+        const dishIndex = tableReservation.dishes.findIndex(dish => dish.code === dishCode);
+        if (dishIndex === -1) {
+            return res.status(404).json({ success: false, message: "Không tìm thấy món ăn!" });
+        }
+        tableReservation.dishes.splice(dishIndex, 1);
+
+        // Cập nhật tổng tiền
+        let totalAmount = 0;
+        tableReservation.dishes.forEach(dish => {
+            totalAmount += dish.totalPerDish;
+        });
+
+        // Trừ đi số tiền đặt cọc
+        let depositAmount = tableReservation.depositAmount || 0;
+        if (tableReservation.deposit && totalAmount >= depositAmount) {
+            totalAmount -= depositAmount;
+        }
+
+        // Tính toán giá trị paid
+        let paid;
+        if (totalAmount < depositAmount) {
+            paid = totalAmount;
+        } else {
+            paid = totalAmount + depositAmount;
+        }
+
+        tableReservation.totalAmount = totalAmount;
+        tableReservation.paid = paid;
+        await tableReservation.save();
+
+        // Trả về phản hồi thành công
+        res.status(200).json({ success: true, message: "Xóa món ăn thành công!", tableReservation });
+
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message })
+    }
+}
