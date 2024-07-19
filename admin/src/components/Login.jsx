@@ -26,7 +26,11 @@ const Login = () => {
       saveTokenToLocalStorage(result.data.accessToken);
       saveUserToLocalStorage(result.data.user);
       toast.success("Đăng nhập thành công!");
-      naviagate("/");
+      if (result.data.user.role === "Quản lý") {
+        naviagate("/");
+      } else {
+        naviagate("/orders");
+      }
     } catch (error) {
       toast.error("Sai tài khoản hoặc mật khẩu!");
     } finally {

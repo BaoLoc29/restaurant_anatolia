@@ -60,13 +60,6 @@ const Profile = () => {
     }
   };
 
-  const handleCancelEdit = () => {
-    form.setFieldsValue({
-      ...initialValuesRef.current,
-      gender: setUserProfile ? setUserProfile.gender : undefined,
-    });
-  };
-
   // change password
   const handleChangePassword = async (oldPassword, newPassword) => {
     try {
@@ -241,14 +234,6 @@ const Profile = () => {
                 className="w-[15rem] h-[2.75rem] mr-2 bg-green-500 hover:bg-green-600 text-white text-base font-bold rounded-sm"
               >
                 Lưu thay đổi
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                className="w-[10rem] h-[2.75rem] bg-gray-500 text-white text-base font-bold hover:bg-gray-600 rounded-sm"
-              >
-                Hủy
               </button>
             </div>
           </Form>

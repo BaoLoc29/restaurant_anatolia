@@ -78,7 +78,7 @@ function DashboardStatsGrid() {
   return (
     <div className="flex gap-4 w-full">
       <BoxWrapper>
-        <div className="rounded-full h-12 w-12 flex items-center justify-center bg-sky-600">
+        <div className="rounded-full h-12 w-12 flex items-center justify-center bg-sky-500">
           <TbBrandAirtable className="text-2xl text-white" />
         </div>
         <div className="pl-4">

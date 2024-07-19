@@ -304,7 +304,7 @@ const MenuComponent = () => {
   };
 
   return (
-    <div className="h-[37.45rem]">
+    <div className="h-screen">
       <div className="flex justify-between items-center px-2 pb-4 pr-4 pl-4 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách món ăn</h1>
         <Space.Compact className="w-[32rem] relative">

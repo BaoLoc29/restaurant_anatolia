@@ -46,7 +46,7 @@ const Confirm = () => {
       setState((prevState) => ({ ...prevState, loading: true }));
       try {
         const { data } = await axios.post(
-          "https://restaurant-anatolia-backend.onrender.com/payment/create-checkout-session",
+          "http://localhost:4000/payment/create-checkout-session",
           updatedReservationData,
           {
             headers: {
@@ -70,7 +70,7 @@ const Confirm = () => {
       try {
         setState((prevState) => ({ ...prevState, loading: true }));
         const { data } = await axios.post(
-          "https://restaurant-anatolia-backend.onrender.com/reservation/send",
+          "http://localhost:4000/reservation/send",
           updatedReservationData,
           {
             headers: {
@@ -150,7 +150,7 @@ const Confirm = () => {
                       setState((prevState) => ({
                         ...prevState,
                         depositOption: e.target.value,
-                        errorMessage: "", 
+                        errorMessage: "",
                       }))
                     }
                   >

@@ -1,4 +1,3 @@
-import classNames from "classnames";
 import React, { useCallback, useEffect, useState } from "react";
 import { getAllMenu } from "../services/menu.js";
 import { Empty, Image, Skeleton } from "antd";
@@ -54,15 +53,7 @@ function PopularProducts() {
                     ? `${menu.name.substring(0, 20)}...`
                     : menu.name}
                 </p>
-                <span
-                  className={classNames(
-                    {
-                      "text-red-500": menu.status === "Hết món",
-                      "text-green-500": menu.status === "Còn món",
-                    },
-                    "text-xs font-medium"
-                  )}
-                >
+                <span className="text-xs font-medium text-green-500">
                   {menu.status}
                 </span>
               </div>

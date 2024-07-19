@@ -1,10 +1,8 @@
-// import React, { useEffect, useState } from "react";
-// import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
-import { PieChart, Pie, ResponsiveContainer, Legend } from "recharts";
+import React, { useEffect, useState } from "react";
+import { getTop3Dishes } from "../../services/orderFood.js";
+import { PieChart, Pie, ResponsiveContainer, Legend, Cell } from "recharts";
 
-// import { getAgeUser } from "../../services/user";
 const RADIAN = Math.PI / 180;
-// const COLORS = ["#00C49F", "#FFBB28", "#FF8042"];
 
 const renderCustomizedLabel = ({
   cx,
@@ -30,28 +28,38 @@ const renderCustomizedLabel = ({
     </text>
   );
 };
-function BuyerProfileChart() {
-  //   const [data, setData] = useState([]);
 
-  //   useEffect(() => {
-  //     const fetchData = async () => {
-  //       try {
-  //         const response = await getAgeUser();
-  //         setData(response.data.data);
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     };
-  //     fetchData();
-  //   }, []);
+function BuyerProfileChart() {
+  const [data, setData] = useState([]);
+  const COLORS = ["#FF0000", "#22C55E", "#0084ff"];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await getTop3Dishes();
+        const topDishes = response.data.topDishes.map((dish) => ({
+          name: dish._id,
+          value: dish.totalQuantity,
+        }));
+        setData(topDishes);
+      } catch (error) {
+        console.error("Error fetching top dishes:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
-    <div className="w-[20rem] h-[22rem] bg-white p-4 rounded-sm border border-gray-200 flex flex-col">
-      <strong className="text-gray-700 font-medium">Text</strong>
+    <div className="w-[20rem] h-[24rem] bg-white p-4 rounded-sm border border-gray-200 flex flex-col">
+      <strong className="text-gray-700 font-medium">
+        Top 3 Món Ăn Bán Chạy Nhất
+      </strong>
       <div className="mt-3 w-full flex-1 text-xs"></div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart width={400} height={300}>
           <Pie
-            // data={data}
+            data={data}
             cx="50%"
             cy="45%"
             labelLine={false}
@@ -60,12 +68,12 @@ function BuyerProfileChart() {
             fill="#8884d8"
             dataKey="value"
           >
-            {/* {data.map((_, index) => (
+            {data.map((entry, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
               />
-            ))} */}
+            ))}
           </Pie>
           <Legend />
         </PieChart>

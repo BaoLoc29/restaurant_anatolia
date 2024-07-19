@@ -167,6 +167,7 @@ const Orders = () => {
       const confirmValue = {
         ...dataToSend,
         depositAmount: dataToSend.deposit ? 200000 : 0,
+        status: "Đang hoạt động",
       };
       const result = await createReservation(confirmValue);
       if (result.data?.success) {
@@ -178,7 +179,7 @@ const Orders = () => {
         form.resetFields();
         setTimeout(() => {
           setShowResult(false);
-        }, 10000);
+        }, 6000);
         setErrorMessage("");
       } else {
         const errorMessage =
@@ -264,7 +265,7 @@ const Orders = () => {
   };
 
   return (
-    <div className="h-[54rem]">
+    <div className="h-screen">
       <div className="flex justify-between items-center px-2 pb-4 px-2 pt-0">
         <h1 className="text-gray-500 text-xl">Danh sách đơn đặt bàn</h1>
         <Input

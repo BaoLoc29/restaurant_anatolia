@@ -1,12 +1,16 @@
 import express from "express";
-import { getOrderById, getPagingOrder, orderFood, searchOrder, statistics } from '../controllers/tableReservation.js';
+import { deleteOrder, getOrderById, getPagingOrder, getTop3Dishes, orderFood, searchOrder, statistics } from '../controllers/tableReservation.js';
 const router = express.Router();
+import authentication from './../middlewares/authentication.js';
+import authorization from './../middlewares/authorization.js';
 
-router.post("/order-food/:reservationId", orderFood)
-router.get("/revenue-statistics", statistics)
-router.get("/get-detail-order/:reservationId", getOrderById)
-// router.delete("/delete-order/:reservationId", deleteOrderFood)
-router.get("/get-order-food", getPagingOrder)
-router.post("/search-order", searchOrder)
+router.get("/revenue-statistics", authentication, authorization, statistics)
+router.get('/top-dishes', authentication, authorization, getTop3Dishes);
+router.get("/get-detail-order/:reservationId", authentication, getOrderById)
+router.get("/get-order-food", authentication, getPagingOrder)
+router.post("/order-food/:reservationId", authentication, orderFood)
+router.post("/search-order", authentication, searchOrder)
+router.delete("/delete-order/:reservationId/:dishCode", deleteOrder)
+
 
 export default router;
