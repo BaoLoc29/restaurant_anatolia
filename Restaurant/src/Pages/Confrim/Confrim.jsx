@@ -46,7 +46,7 @@ const Confirm = () => {
       setState((prevState) => ({ ...prevState, loading: true }));
       try {
         const { data } = await axios.post(
-          "http://localhost:4000/payment/create-checkout-session",
+          "https://restaurant-anatolia-backend.onrender.com/payment/create-checkout-session",
           updatedReservationData,
           {
             headers: {
@@ -70,7 +70,7 @@ const Confirm = () => {
       try {
         setState((prevState) => ({ ...prevState, loading: true }));
         const { data } = await axios.post(
-          "http://localhost:4000/reservation/send",
+          "https://restaurant-anatolia-backend.onrender.com/reservation/send",
           updatedReservationData,
           {
             headers: {
@@ -92,7 +92,6 @@ const Confirm = () => {
       }
     }
   };
-
   const handleBack = () => {
     navigate("/", { state: reservationData });
     setTimeout(() => {
@@ -150,7 +149,7 @@ const Confirm = () => {
                       setState((prevState) => ({
                         ...prevState,
                         depositOption: e.target.value,
-                        errorMessage: "",
+                        errorMessage: "", // Xóa thông báo lỗi khi thay đổi
                       }))
                     }
                   >

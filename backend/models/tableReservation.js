@@ -1,7 +1,4 @@
 import mongoose from "mongoose";
-
-// Schema TableReservation
-// Schema TableReservation
 const TableReservationSchema = new mongoose.Schema({
     reservationId: {
         type: mongoose.Schema.Types.ObjectId,
