@@ -8,7 +8,7 @@ dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const frontend_url = "http://localhost:3000";
+const frontend_url = "https://restaurant-anatolia-admin.onrender.com";
 const success_url = `${frontend_url}/payment-success`;
 const cancel_url = `${frontend_url}/admin/payment-cancel`;
 
@@ -81,7 +81,6 @@ const createAdminCheckoutSession = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 const handleStripe = async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
@@ -99,6 +98,7 @@ const handleStripe = async (req, res) => {
     switch (event.type) {
         case 'checkout.session.completed':
             const session = event.data.object;
+            console.log('Session metadata:', session.metadata);
             await handlePaymentSuccess(session);
             break;
 
@@ -115,22 +115,26 @@ const handleStripe = async (req, res) => {
     res.json({ received: true });
 };
 
+
 const handlePaymentSuccess = async (session) => {
     const reservationId = session.metadata.reservationId;
+    const totalAmount = session.metadata.totalAmount;
 
     try {
+        console.log('Finding reservation with reservationId:', reservationId);
         const reservation = await TableReservation.findOne({ reservationId });
         if (reservation) {
             reservation.status = "Đã thanh toán";
-            reservation.statusReservation = "Đã thanh toán"
             await reservation.save();
-            console.log("Reservation updated successfully after payment.");
+            console.log("TableReservation updated successfully after payment.");
 
-            const tableReservation = await Reservation.findOne({ reservationId });
+            const tableReservation = await TableReservation.findOne({ reservationId });
             if (tableReservation) {
-                tableReservation.status = "Đã thanh toán";
+                tableReservation.statusReservation = "Đã thanh toán";
                 await tableReservation.save();
+                console.log("Reservation updated successfully after payment.");
             }
+
         } else {
             console.error("Reservation not found:", reservationId);
         }
@@ -139,5 +143,22 @@ const handlePaymentSuccess = async (session) => {
     }
 };
 
+const handlePaymentFailure = async (session) => {
+    const reservationId = session.metadata.reservationId;
+
+    try {
+        const tableReservation = await TableReservation.findOne({ reservationId });
+
+        if (tableReservation) {
+            tableReservation.statusReservation = 'Thanh toán thất bại';
+            await tableReservation.save();
+            console.log("Reservation updated with payment failed status.");
+        } else {
+            console.error("Reservation not found:", reservationId);
+        }
+    } catch (error) {
+        console.error("Error updating reservation after payment failure:", error.message);
+    }
+};
 
 export { createAdminCheckoutSession, handleStripe };

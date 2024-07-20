@@ -16,7 +16,7 @@ const Success = () => {
     const fetchReservationDetails = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:4000/reservation/details/${reservationId}`
+          `https://restaurant-anatolia-backend.onrender.com/reservation/details/${reservationId}`
         );
         if (data.success) {
           setReservationDetails(data.reservationDetails);
@@ -32,7 +32,7 @@ const Success = () => {
   const formatDateToDDMMYYYY = (dateString) => {
     const date = new Date(dateString);
     const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0"); 
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };

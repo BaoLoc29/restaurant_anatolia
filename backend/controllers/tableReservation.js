@@ -154,7 +154,7 @@ export const statistics = async (req, res) => {
             {
                 $match: {
                     // Đổi status thành "Đã thanh toán"
-                    status: "Chưa thanh toán",
+                    status: "Đã thanh toán",
                     reservationDate: {
                         $gte: new Date(startYear, 0, 1), // Từ ngày 1 tháng 1 của startYear
                         $lt: new Date(endYear + 1, 0, 1) // Đến ngày 1 tháng 1 của endYear + 1
