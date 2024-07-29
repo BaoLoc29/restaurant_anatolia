@@ -5,7 +5,7 @@ import schedule from 'node-schedule';
 
 export const scheduleCancellation = async (reservationDateTime, savedReservation) => {
     try {
-        schedule.scheduleJob(reservationDateTime.clone().add(4, 'minutes').toDate(), async function () {
+        schedule.scheduleJob(reservationDateTime.clone().add(3, 'minutes').toDate(), async function () {
             const reservation = await Reservation.findById(savedReservation._id);
             if (reservation && reservation.status === 'Đã đặt trước') {
                 reservation.status = 'Đã hủy';

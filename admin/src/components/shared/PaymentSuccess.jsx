@@ -1,6 +1,8 @@
 import React from "react";
 import { FrownOutlined, MehOutlined, SmileOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { Rate, Button } from "antd";
+
 const customIcons = {
   1: <FrownOutlined className="text-3xl" />,
   2: <FrownOutlined className="text-3xl" />,
@@ -10,6 +12,7 @@ const customIcons = {
 };
 
 const PaymentSuccess = () => {
+  const navigate = useNavigate();
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-r from-red-200 via-red-100 to-red-200">
       <div className="relative mx-4 text-center shadow-2xl p-10 bg-white rounded-xl max-w-4xl w-full">
@@ -34,7 +37,7 @@ const PaymentSuccess = () => {
             character={({ index = 0 }) => customIcons[index + 1]}
           />
         </div>
-        <Button size="large" className="mt-8">
+        <Button size="large" className="mt-8" onClick={() => navigate("/")}>
           Quay về Dashboard
         </Button>
       </div>
