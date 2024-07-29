@@ -8,7 +8,7 @@ dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-const frontend_url = "https://restaurant-anatolia-admin.onrender.com";
+const frontend_url = "http://localhost:3000";
 const success_url = `${frontend_url}/payment-success`;
 const cancel_url = `${frontend_url}/admin/payment-cancel`;
 

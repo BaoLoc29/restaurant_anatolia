@@ -11,7 +11,8 @@ router.put("/:id", upload.single("image"), authentication, authorization, editMe
 router.delete("/:id", authentication, authorization, deleteMenu)
 router.get("/get-paging-menu", getPagingMenu)
 router.get('/category/:category', getMenuByCategory);
+
 router.get("/", getAll);
-router.get("/:id", getMenuById)
+router.get("/:id", authentication, getMenuById)
 router.post("/search-menu", searchMenu)
 export default router
