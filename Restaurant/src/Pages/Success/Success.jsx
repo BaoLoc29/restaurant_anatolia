@@ -16,7 +16,7 @@ const Success = () => {
     const fetchReservationDetails = async () => {
       try {
         const { data } = await axios.get(
-          `http://localhost:4000/reservation/details/${reservationId}`
+          `https://restaurant-anatolia-backend.onrender.com/reservation/details/${reservationId}`
         );
         if (data.success) {
           setReservationDetails(data.reservationDetails);
