@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import "./style.css";
 import Footer from "../../components/Footer";
@@ -54,6 +54,7 @@ const Menu_res = () => {
     navigate(-2);
   };
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     if (category) {
       fetchMenus();

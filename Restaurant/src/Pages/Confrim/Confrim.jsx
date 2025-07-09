@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import toast from "react-hot-toast";
 import { scroller } from "react-scroll";
 import { Radio } from "antd";
 import "./Confrim.css";
@@ -46,7 +45,7 @@ const Confirm = () => {
       setState((prevState) => ({ ...prevState, loading: true }));
       try {
         const { data } = await axios.post(
-          "https://restaurant-anatolia-backend.onrender.com/payment/create-checkout-session",
+          "http://localhost:4000/payment/create-checkout-session",
           updatedReservationData,
           {
             headers: {
@@ -70,7 +69,7 @@ const Confirm = () => {
       try {
         setState((prevState) => ({ ...prevState, loading: true }));
         const { data } = await axios.post(
-          "https://restaurant-anatolia-backend.onrender.com/reservation/send",
+          "http://localhost:4000/reservation/send",
           updatedReservationData,
           {
             headers: {
