@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { HiOutlineArrowNarrowRight } from "react-icons/hi";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import "./Success.css";
 
 const Success = () => {
   const [reservationDetails, setReservationDetails] = useState(null);
-  const navigate = useNavigate();
   const location = useLocation();
   const reservationId = new URLSearchParams(location.search).get(
     "reservationId"
@@ -16,7 +14,7 @@ const Success = () => {
     const fetchReservationDetails = async () => {
       try {
         const { data } = await axios.get(
-          `https://restaurant-anatolia-backend.onrender.com/reservation/details/${reservationId}`
+          `http://localhost:4000/reservation/details/${reservationId}`
         );
         if (data.success) {
           setReservationDetails(data.reservationDetails);

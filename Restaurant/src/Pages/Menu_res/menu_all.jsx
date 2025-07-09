@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./style.css";
 import Footer from "../../components/Footer";
@@ -60,6 +60,7 @@ const Menu_all = () => {
     navigate(-1);
   };
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
     fetchMenus();
   }, []);
