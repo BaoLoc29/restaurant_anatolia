@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+/* eslint-disable no-unused-vars */
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { HiOutlineArrowRight } from "react-icons/hi";
 import { isBefore, startOfToday, parse } from "date-fns";

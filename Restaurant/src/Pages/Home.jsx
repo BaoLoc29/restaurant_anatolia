@@ -1,4 +1,3 @@
-import React from "react";
 import About from "../components/About.jsx";
 import HeroSection from "../components/HeroSection.jsx";
 import Menu from "../components/Menu.jsx";

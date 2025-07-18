@@ -1,4 +1,4 @@
-import React from "react";
+/* eslint-disable react/prop-types */
 import "./style.css";
 import { IoLocation } from "react-icons/io5";
 import { IoIosTimer } from "react-icons/io";
@@ -23,7 +23,7 @@ const RestaurantCard = ({ restaurant }) => {
         <div
           style={{ display: "flex", alignItems: "center", fontSize: "20px" }}
         >
-          <div div style={{ paddingRight: "10px" }}>
+          <div style={{ paddingRight: "10px" }}>
             <IoIosTimer />
           </div>
           <p className="restaurant-hours">
