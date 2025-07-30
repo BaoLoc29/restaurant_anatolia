@@ -1,4 +1,3 @@
-import moment from 'moment';
 import { Reservation } from "../models/reservation.js";
 import { TableReservation } from "../models/tableReservation.js"
 import Table from "../models/table.js";
@@ -23,25 +22,28 @@ const findMatchingKeywords = (notes) => {
   }
   return matchingKeywords;
 };
-import moment from 'moment-timezone';
-
 const checkReservationTime = (date, time) => {
-  const reservationDateTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Asia/Ho_Chi_Minh');
+  const isISOString = typeof date === 'string' && date.includes('T');
+
+  const localDate = isISOString
+    ? moment.tz(date, 'Asia/Ho_Chi_Minh') // ISO dạng: "2025-07-30T17:37:00.000Z"
+    : moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Asia/Ho_Chi_Minh');
+
   const now = moment.tz('Asia/Ho_Chi_Minh');
 
-  const isToday = reservationDateTime.isSame(now, 'day');
-
-  if (isToday && reservationDateTime.isBefore(now)) {
+  if (localDate.isSame(now, 'day') && localDate.isBefore(now)) {
     throw new Error('Thời gian đặt chỗ phải từ thời điểm hiện tại trở đi đối với ngày hiện tại.');
   }
 
-  const reservationDeadline = moment.tz(date, 'YYYY-MM-DD', 'Asia/Ho_Chi_Minh').set({ hour: 23, minute: 0 }).subtract(15, 'minutes');
+  const deadline = moment.tz(localDate.format('YYYY-MM-DD'), 'YYYY-MM-DD', 'Asia/Ho_Chi_Minh')
+    .set({ hour: 23, minute: 0 })
+    .subtract(15, 'minutes');
 
-  if (reservationDateTime.isSameOrAfter(reservationDeadline)) {
+  if (localDate.isSameOrAfter(deadline)) {
     throw new Error('Chúng tôi không thể nhận đơn đặt bàn cho thời gian này!');
   }
 
-  return reservationDateTime;
+  return localDate;
 };
 
 const getTableCapacity = (guests) => {
@@ -51,7 +53,7 @@ const getTableCapacity = (guests) => {
   if (guests >= 9 && guests <= 12) return 12;
   throw new Error('Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để biết thêm chi tiết!');
 };
-const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => {
+const findAvailableTable = async (localDate, tableCapacity, notes) => {
   let tables = [];
   if (notes) {
     const matchingKeywords = findMatchingKeywords(notes);
@@ -71,8 +73,8 @@ const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => 
   }
 
   for (const table of tables) {
-    const fifteenMinutesBefore = reservationDateTime.clone().subtract(15, 'minutes').toDate();
-    const fifteenMinutesAfter = reservationDateTime.clone().add(15, 'minutes').toDate();
+    const fifteenMinutesBefore = localDate.clone().subtract(15, 'minutes').toDate();
+    const fifteenMinutesAfter = localDate.clone().add(15, 'minutes').toDate();
     const isTableReserved = await TableReservation.exists({
       tableId: table.id_table,
       reservationDate: {
@@ -87,19 +89,19 @@ const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => 
 export const send_reservation = async (req, res, next) => {
   try {
     const { name, email, date, time, phone, guests, notes, deposit, depositAmount, status } = req.body;
-    const reservationDateTime = checkReservationTime(date, time);
+    const localDate = checkReservationTime(date, time);
     const tableCapacity = getTableCapacity(guests);
-    const availableTable = await findAvailableTable(reservationDateTime, tableCapacity, notes);
+    const availableTable = await findAvailableTable(localDate, tableCapacity, notes);
 
     const newReservation = new Reservation({
-      name, date: reservationDateTime, time, email, phone, guests, notes, status,
+      name, date: localDate, time, email, phone, guests, notes, status,
       table: availableTable.id_table, deposit: deposit || false, depositAmount: depositAmount || 0,
     });
     const savedReservation = await newReservation.save();
 
     const newTableReservation = new TableReservation({
       reservationId: savedReservation._id, tableId: availableTable.id_table,
-      reservationDate: reservationDateTime, reservationTime: time, statusReservation: savedReservation.status,
+      reservationDate: localDate, reservationTime: time, statusReservation: savedReservation.status,
       deposit: savedReservation.deposit, depositAmount: savedReservation.depositAmount
     });
     await newTableReservation.save();
@@ -109,8 +111,8 @@ export const send_reservation = async (req, res, next) => {
     if (savedReservation.status === 'Đang hoạt động') availableTable.status = 'Đang sử dụng';
     await availableTable.save();
 
-    await scheduleDepositUpdate(reservationDateTime, availableTable, savedReservation);
-    await scheduleCancellation(reservationDateTime, savedReservation);
+    await scheduleDepositUpdate(localDate, availableTable, savedReservation);
+    await scheduleCancellation(localDate, savedReservation);
 
     return res.status(200).json({
       success: true, message: 'Đặt bàn thành công!',
