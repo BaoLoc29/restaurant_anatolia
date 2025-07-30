@@ -6,7 +6,7 @@ import joi from "joi";
 import dayjs from "dayjs";
 import { scheduleCancellation } from '../middlewares/cancellation.js';
 import { scheduleDepositUpdate } from '../middlewares/depositUpdate.js';
-
+import moment from 'moment-timezone';
 
 const synonymKeywords = {
   "Cạnh cửa sổ": ["gần cửa sổ", "sát cửa sổ", "view đẹp"],
@@ -23,23 +23,27 @@ const findMatchingKeywords = (notes) => {
   }
   return matchingKeywords;
 };
+import moment from 'moment-timezone';
+
 const checkReservationTime = (date, time) => {
-  const reservationDateTime = moment(`${date}T${time}`);
-  const now = moment();
+  const reservationDateTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Asia/Ho_Chi_Minh');
+  const now = moment.tz('Asia/Ho_Chi_Minh');
+
   const isToday = reservationDateTime.isSame(now, 'day');
 
   if (isToday && reservationDateTime.isBefore(now)) {
     throw new Error('Thời gian đặt chỗ phải từ thời điểm hiện tại trở đi đối với ngày hiện tại.');
   }
-  const reservationTime = moment(time, 'HH:mm');
-  const reservationDeadline = moment(date).set({ hour: 23, minute: 0 }).subtract(15, 'minutes');
 
-  // Kiểm tra thời gian đặt chỗ phải trước 23:00 và không quá 15 phút trước giờ đó
+  const reservationDeadline = moment.tz(date, 'YYYY-MM-DD', 'Asia/Ho_Chi_Minh').set({ hour: 23, minute: 0 }).subtract(15, 'minutes');
+
   if (reservationDateTime.isSameOrAfter(reservationDeadline)) {
-    throw new Error('Chúng tôi không thể nhận đơn đặt bàn cho thời gian này! Vui lòng đặt lại vào thời gian khác!');
+    throw new Error('Chúng tôi không thể nhận đơn đặt bàn cho thời gian này!');
   }
+
   return reservationDateTime;
 };
+
 const getTableCapacity = (guests) => {
   if (guests >= 1 && guests <= 2) return 2;
   if (guests >= 3 && guests <= 4) return 4;
