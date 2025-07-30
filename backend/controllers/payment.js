@@ -1,6 +1,5 @@
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
-import moment from 'moment';
 import { Reservation } from '../models/reservation.js';
 import { TableReservation } from '../models/tableReservation.js';
 import Table from '../models/table.js';
@@ -24,29 +23,29 @@ const findMatchingKeywords = (notes) => {
     }
     return matchingKeywords;
 };
-
-import moment from 'moment-timezone';
-
 const checkReservationTime = (date, time) => {
-  const reservationDateTime = moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Asia/Ho_Chi_Minh');
+  const isISOString = typeof date === 'string' && date.includes('T');
+
+  const localDate = isISOString
+    ? moment.tz(date, 'Asia/Ho_Chi_Minh') // ISO dạng: "2025-07-30T17:37:00.000Z"
+    : moment.tz(`${date} ${time}`, 'YYYY-MM-DD HH:mm', 'Asia/Ho_Chi_Minh');
+
   const now = moment.tz('Asia/Ho_Chi_Minh');
 
-  const isToday = reservationDateTime.isSame(now, 'day');
-
-  if (isToday && reservationDateTime.isBefore(now)) {
+  if (localDate.isSame(now, 'day') && localDate.isBefore(now)) {
     throw new Error('Thời gian đặt chỗ phải từ thời điểm hiện tại trở đi đối với ngày hiện tại.');
   }
 
-  const reservationDeadline = moment.tz(date, 'YYYY-MM-DD', 'Asia/Ho_Chi_Minh').set({ hour: 23, minute: 0 }).subtract(15, 'minutes');
+  const deadline = moment.tz(localDate.format('YYYY-MM-DD'), 'YYYY-MM-DD', 'Asia/Ho_Chi_Minh')
+    .set({ hour: 23, minute: 0 })
+    .subtract(15, 'minutes');
 
-  if (reservationDateTime.isSameOrAfter(reservationDeadline)) {
+  if (localDate.isSameOrAfter(deadline)) {
     throw new Error('Chúng tôi không thể nhận đơn đặt bàn cho thời gian này!');
   }
 
-  return reservationDateTime;
+  return localDate;
 };
-
-
 const getTableCapacity = (guests) => {
     if (guests >= 1 && guests <= 2) return 2;
     if (guests >= 3 && guests <= 4) return 4;
@@ -55,7 +54,7 @@ const getTableCapacity = (guests) => {
     throw new Error('Số lượng khách quá lớn. Vui lòng liên hệ nhà hàng để biết thêm chi tiết!');
 };
 
-const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => {
+const findAvailableTable = async (localDate, tableCapacity, notes) => {
     let tables = [];
     if (notes) {
         const matchingKeywords = findMatchingKeywords(notes);
@@ -75,8 +74,8 @@ const findAvailableTable = async (reservationDateTime, tableCapacity, notes) => 
     }
 
     for (const table of tables) {
-        const fifteenMinutesBefore = reservationDateTime.clone().subtract(15, 'minutes').toDate();
-        const fifteenMinutesAfter = reservationDateTime.clone().add(15, 'minutes').toDate();
+        const fifteenMinutesBefore = localDate.clone().subtract(15, 'minutes').toDate();
+        const fifteenMinutesAfter = localDate.clone().add(15, 'minutes').toDate();
         const isTableReserved = await TableReservation.exists({
             tableId: table.id_table,
             reservationDate: {
@@ -102,15 +101,15 @@ const createCheckoutSession = async (req, res) => {
     console.log("Received data:", { name, email, phone, date, time, guests, notes, deposit });
 
     try {
-        const reservationDateTime = checkReservationTime(date, time);
+        const localDate = checkReservationTime(date, time);
         const tableCapacity = getTableCapacity(guests);
-        const availableTable = await findAvailableTable(reservationDateTime, tableCapacity, notes);
+        const availableTable = await findAvailableTable(localDate, tableCapacity, notes);
 
         const newReservation = new Reservation({
             name,
             email,
             phone,
-            date: reservationDateTime,
+            date: localDate,
             time,
             guests,
             notes,
@@ -125,7 +124,7 @@ const createCheckoutSession = async (req, res) => {
         const newTableReservation = new TableReservation({
             reservationId: savedReservation._id,
             tableId: availableTable.id_table,
-            reservationDate: reservationDateTime,
+            reservationDate: localDate,
             reservationTime: time,
             statusReservation: savedReservation.status,
             deposit: savedReservation.deposit,
@@ -133,7 +132,7 @@ const createCheckoutSession = async (req, res) => {
         });
         await newTableReservation.save();
 
-        await scheduleCancellation(reservationDateTime, savedReservation);
+        await scheduleCancellation(localDate, savedReservation);
 
         if (deposit) {
             const line_items = [{
@@ -229,9 +228,9 @@ const handlePaymentSuccess = async (session) => {
                 await tableReservation.save();
             }
 
-            const reservationDateTime = moment(reservation.date);
+            const localDate = moment(reservation.date);
             const availableTable = await Table.findOne({ id_table: reservation.table });
-            await scheduleDepositUpdate(reservationDateTime, availableTable, reservation);
+            await scheduleDepositUpdate(localDate, availableTable, reservation);
         } else {
             console.error("Reservation not found:", reservationId);
         }
