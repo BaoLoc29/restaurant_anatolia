@@ -45,7 +45,6 @@ const checkReservationTime = (date, time) => {
 
   return localDate;
 };
-
 const getTableCapacity = (guests) => {
   if (guests >= 1 && guests <= 2) return 2;
   if (guests >= 3 && guests <= 4) return 4;
